@@ -18,6 +18,7 @@ export interface IBoardStore {
 		Pick<IToolbar, "stroke" | "strokeWidth" | "fill" | "borderRadius">
 	>) => void;
 	removeSelectedShape: () => void;
+	changeShapeLayer: (shapeId: string, positionToBeMoved: number) => void;
 }
 
 export const useBoardStore = create<IBoardStore>((set) => ({
@@ -51,4 +52,29 @@ export const useBoardStore = create<IBoardStore>((set) => ({
 	removeSelectedShape: () => {
 		set({currentShapeSelected: null});
 	},
+	changeShapeLayer: (shapeId, positionToBeMoved) => {
+		set((state) => {
+			const shapeIndex = state.shapes.findIndex(
+				(shape) => shape.id === shapeId
+			);
+			if (shapeIndex <= 0 || shapeIndex >= state.shapes.length - 1) return {};
+
+			const previousOrAfterShape =
+				state.shapes[
+					shapeIndex -
+						(positionToBeMoved > shapeIndex ? shapeIndex + 1 : shapeIndex - 1)
+				];
+
+			const shapeToBeMoved = state.shapes[shapeIndex];
+
+			const copyShapesArray = [...state.shapes];
+
+			copyShapesArray[positionToBeMoved] = shapeToBeMoved;
+			copyShapesArray[shapeIndex] = previousOrAfterShape;
+
+			return {shapes: [...copyShapesArray]};
+		});
+	},
 }));
+
+// [1,2,3,4,5]

@@ -2,11 +2,11 @@ import {Metadata} from "next";
 import {ReactNode} from "react";
 
 export const metadata: Metadata = {
-	title: "Dashboard",
-	description: "Srcibbly dashboard",
+	title: "Board",
+	description: "Srcibbly Board",
 };
 
-export default function DashboardLayout({
+export default function BoardLayout({
 	children,
 }: Readonly<{children: ReactNode}>) {
 	return <>{children}</>;

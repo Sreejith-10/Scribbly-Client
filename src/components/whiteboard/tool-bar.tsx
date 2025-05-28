@@ -1,4 +1,3 @@
-import {ToggleGroup, ToggleGroupItem} from "../ui/toggle-group";
 import {
 	LuDiamond,
 	LuMousePointer2,
@@ -11,9 +10,9 @@ import {GoDash} from "react-icons/go";
 import {IoImageOutline} from "react-icons/io5";
 import {BiEraser} from "react-icons/bi";
 import {ReactNode} from "react";
-import {ActionType} from "@/types/canvas.types";
+import {ActionType} from "@/types";
 import {Hand} from "lucide-react";
-import {useToolbarStore} from "@/stores/useToolbarStore";
+import {useToolbarStore} from "@/stores";
 
 interface Tools {
 	icon: ReactNode;
@@ -68,38 +67,41 @@ export const ToolBar = () => {
 
 	return (
 		<div className="w-fit h-auto p-2 rounded-lg shadow-md bg-white border border-zinc-300 border-opacity-30 fixed top-5 left-1/2 -translate-x-1/2 z-9">
-			<ToggleGroup
-				type="single"
-				onValueChange={(value) => {
-					if (value) {
-						setAction(value as ActionType);
-						if (!["select", "eraser", "move"].includes(value)) {
+			<div className="flex w-full gap-2 cursor-pointer">
+				<div
+					onClick={() => {
+						setAction("move" as ActionType);
+						if (!["select", "eraser", "move"].includes("move")) {
 							setToolSelected(true);
 						} else {
 							setToolSelected(false);
 						}
-					}
-				}}>
-				<ToggleGroupItem
-					value="move"
-					aria-label="move"
-					className={`hover:bg-blue-100 cursor-pointer ${
-						action === "move" && "bg-blue-300 text-blue-600"
-					} data-[state=on]:bg-blue-300 data-[state=on]:text-blue-600`}>
-					<Hand />
-				</ToggleGroupItem>
-				{tools.map((t, index) => (
-					<ToggleGroupItem
-						value={t.value}
+					}}
+					aria-label={"move"}
+					className={`size-8 rounded-md hover:bg-blue-200 flex items-center justify-center ${
+						action === "move" ? "bg-blue-300" : "bg-white"
+					}`}>
+					<Hand className="size-5" />
+				</div>
+				{tools.map((tool, index) => (
+					<div
+						onClick={() => {
+							setAction(tool.value as ActionType);
+							if (!["select", "eraser", "move"].includes(tool.value)) {
+								setToolSelected(true);
+							} else {
+								setToolSelected(false);
+							}
+						}}
+						aria-label={tool.value}
 						key={index}
-						aria-label={t.value}
-						className={`hover:bg-blue-100 cursor-pointer ${
-							action === t.value && "bg-blue-300 text-blue-600"
-						} data-[state=on]:bg-blue-300 data-[state=on]:text-blue-600`}>
-						{t.icon}
-					</ToggleGroupItem>
+						className={`size-8 rounded-md hover:bg-blue-200 flex items-center justify-center ${
+							action === tool.value ? "bg-blue-300" : "bg-white"
+						}`}>
+						{tool.icon}
+					</div>
 				))}
-			</ToggleGroup>
+			</div>
 		</div>
 	);
 };

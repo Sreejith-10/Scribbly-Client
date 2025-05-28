@@ -121,6 +121,13 @@
 	}
 }
 
+@layer utilities {
+	.input-area:focus ~ .label-text,
+	.input-area:not(:placeholder-shown) ~ .label-text {
+		@apply -top-0 bg-white text-[12px] px-2 dark:bg-slate-900 font-semibold;
+	}
+}
+
 * {
 	::-webkit-scrollbar {
 		margin-top: 10px;

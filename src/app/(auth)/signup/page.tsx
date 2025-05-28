@@ -109,6 +109,7 @@ export default function SignupPage() {
 											<input
 												{...field}
 												className="outline-hidden border-none w-full input-area"
+												placeholder=""
 											/>
 										</FormControl>
 										<FormLabel className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none label-text transition-all">
@@ -138,6 +139,7 @@ export default function SignupPage() {
 												{...field}
 												className="outline-hidden border-none w-full input-area"
 												type={showPass ? "text" : "password"}
+												placeholder=""
 											/>
 										</FormControl>
 										<FormLabel className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none label-text transition-all">

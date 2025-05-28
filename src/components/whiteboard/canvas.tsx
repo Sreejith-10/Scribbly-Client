@@ -1,7 +1,7 @@
-import {cn} from "@/lib/utils";
-import {useBoardStore} from "@/stores/useBoardStore";
-import {useToolbarStore} from "@/stores/useToolbarStore";
-import {ActionType} from "@/types/canvas.types";
+import {cn} from "@/lib";
+import {useBoardStore} from "@/stores";
+import {useToolbarStore} from "@/stores";
+import {ActionType} from "@/types";
 import Konva from "konva";
 import {KonvaEventObject} from "konva/lib/Node";
 import {useRef} from "react";
@@ -25,7 +25,6 @@ interface CanvasProps {
 const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
 	const {action, stroke, fill, setIsShapeSelected, strokeWidth} =
 		useToolbarStore();
-
 	const {
 		shapes,
 		setShapes,
@@ -40,6 +39,8 @@ const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
 	const currentShapeId = useRef<string | null>(null);
 	const initialPosition = useRef<{x: number; y: number} | null>(null);
 	const tranformerRef = useRef<Konva.Transformer>(null);
+	const lastUpdateTime = useRef(0);
+	const throttleDelay = 50;
 
 	const isDraggable = action === ActionType.SELECT;
 
@@ -126,6 +127,9 @@ const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
 	const pointerMoveHandler = () => {
 		if (["move", "select", "eraser"].includes(action)) return;
 
+		const now = new Date().getTime();
+		if (now - lastUpdateTime.current < throttleDelay) return;
+		lastUpdateTime.current = now;
 		const stage = stageRef.current;
 		const position = stage?.getPointerPosition();
 		const x = position?.x;
@@ -271,6 +275,7 @@ const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
 									id={shape.id}
 									draggable={isDraggable}
 									onClick={onclickHandler}
+									tension={.5}
 								/>
 							);
 						default:
