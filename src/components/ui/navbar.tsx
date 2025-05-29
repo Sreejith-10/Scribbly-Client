@@ -14,6 +14,7 @@ import {
 } from "./navigation-menu";
 import {Button} from "./button";
 import Image from "next/image";
+import Link from "next/link";
 
 export const NavBar = () => {
 	const [scrolled, setScrolled] = useState(false);
@@ -116,9 +117,11 @@ export const NavBar = () => {
 
 				<div className="flex items-center gap-2">
 					<Button variant="ghost" className="hidden md:inline-flex">
-						Log in
+						<Link href="/login">Log in</Link>
 					</Button>
-					<Button>Sign up free</Button>
+					<Button>
+						<Link href="/register">Sign up free</Link>
+					</Button>
 				</div>
 			</div>
 		</motion.header>

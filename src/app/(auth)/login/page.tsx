@@ -22,6 +22,9 @@ import {LuLoaderCircle} from "react-icons/lu";
 import {loginSchema} from "@/schema/login.schema";
 import {useState} from "react";
 import {Eye, EyeClosed} from "lucide-react";
+import AxiosInstance from "@/lib/axios";
+import axios, {AxiosError} from "axios";
+import {toast} from "sonner";
 
 export default function LoginPage() {
 	const [showPass, setShowPass] = useState<boolean>(false);
@@ -33,14 +36,24 @@ export default function LoginPage() {
 		},
 	});
 
-	const submitHandler = (values: z.infer<typeof loginSchema>) => {
-		console.log(values);
+	const submitHandler = async (values: z.infer<typeof loginSchema>) => {
+		try {
+			const response = await AxiosInstance.post("/auth/login", values);
+			toast.success(response.data.message);
+		} catch (error) {
+			if (axios.isAxiosError(error)) {
+				const axiosError = error as AxiosError<{message: string}>;
+				toast.error(axiosError.response?.data.message);
+			} else {
+				console.log(error);
+			}
+		}
 	};
 
 	return (
 		<div className="w-auto h-fit bg-white px-10 py-16 rounded-md shadow-md shadow-slate-200 space-y-4">
 			<div>
-				<H1>Welcom back</H1>
+				<H1>Welcome back</H1>
 				<P className="text-slate-600">
 					Enter your email below to login to your account
 				</P>

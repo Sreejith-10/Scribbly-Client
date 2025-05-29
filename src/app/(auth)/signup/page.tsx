@@ -168,12 +168,7 @@ export default function SignupPage() {
 							className="hover:underline inline-block float-right">
 							Already have an account
 						</Link>
-						<Button
-							type="submit"
-							className={`w-full ${
-								form.formState.errors &&
-								"text-white bg-destructive hover:bg-destructive/80"
-							}`}>
+						<Button type="submit" className="w-full">
 							{form.formState.isLoading && (
 								<LuLoaderCircle className="animate-spin" />
 							)}
