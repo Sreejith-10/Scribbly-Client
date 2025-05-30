@@ -22,19 +22,38 @@ import Link from "next/link";
 import {LuLoaderCircle} from "react-icons/lu";
 import {Eye, EyeClosed} from "lucide-react";
 import {useState} from "react";
+import {useMutation} from "@tanstack/react-query";
+import {regiserUser} from "@/controllers/auth";
+import {toast} from "sonner";
+import {useRouter} from "next/navigation";
 
 export default function SignupPage() {
 	const [showPass, setShowPass] = useState(false);
 	const form = useForm<z.infer<typeof signupSchema>>({
 		resolver: zodResolver(signupSchema),
 		defaultValues: {
-			name: "",
+			username: "",
 			email: "",
 			password: "",
 		},
 	});
 
-	const submitHandler = (values: z.infer<typeof signupSchema>) => {};
+	const router = useRouter();
+
+	const {mutate, isPending} = useMutation({
+		mutationFn: (values: z.infer<typeof signupSchema>) =>
+			regiserUser<{message: string}>(values),
+		onSuccess: (data) => {
+			toast.success(data.message);
+			router.push("/login");
+		},
+		onError: (error) => {
+			toast.error(error.message);
+		},
+	});
+
+	const submitHandler = async (values: z.infer<typeof signupSchema>) =>
+		mutate(values);
 
 	return (
 		<div className="w-auto h-fit bg-white px-10 py-16 rounded-md border border-slate-200 border-opacity-50 shadow-lg shadow-slate-200 space-y-4">
@@ -65,13 +84,13 @@ export default function SignupPage() {
 						onSubmit={form.handleSubmit(submitHandler)}>
 						<FormField
 							control={form.control}
-							name="name"
+							name="username"
 							render={({field}) => (
 								<FormItem>
 									<div className="relative flex items-center gap-5 h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm">
 										<FaUser
 											className={`${
-												form.formState.errors?.name
+												form.formState.errors?.username
 													? "text-destructive"
 													: "text-black"
 											} size-5`}
@@ -168,10 +187,8 @@ export default function SignupPage() {
 							className="hover:underline inline-block float-right">
 							Already have an account
 						</Link>
-						<Button type="submit" className="w-full">
-							{form.formState.isLoading && (
-								<LuLoaderCircle className="animate-spin" />
-							)}
+						<Button type="submit" className="w-full" disabled={isPending}>
+							{isPending && <LuLoaderCircle className="animate-spin" />}
 							Signup
 						</Button>
 					</form>

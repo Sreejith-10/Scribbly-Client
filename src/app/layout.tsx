@@ -1,7 +1,7 @@
 import type {Metadata} from "next";
 import "./globals.css";
 import {Toaster} from "@/components/ui/sonner";
-import {ThemeProvider} from "@/providers/theme-provider";
+import {QueryProvider, ThemeProvider} from "@/providers";
 
 export const metadata: Metadata = {
 	title: "Create Next App",
@@ -16,19 +16,21 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body>
-				<ThemeProvider
-					attribute="class"
-					defaultTheme="system"
-					enableSystem
-					disableTransitionOnChange>
-					<Toaster
-						position="top-right"
-						richColors={true}
-						duration={2000}
-						closeButton={true}
-					/>
-					{children}
-				</ThemeProvider>
+				<QueryProvider>
+					<ThemeProvider
+						attribute="class"
+						defaultTheme="system"
+						enableSystem
+						disableTransitionOnChange>
+						<Toaster
+							position="top-right"
+							richColors={true}
+							duration={2000}
+							closeButton={true}
+						/>
+						{children}
+					</ThemeProvider>
+				</QueryProvider>
 			</body>
 		</html>
 	);

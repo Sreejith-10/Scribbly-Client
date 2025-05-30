@@ -22,9 +22,10 @@ import {LuLoaderCircle} from "react-icons/lu";
 import {loginSchema} from "@/schema/login.schema";
 import {useState} from "react";
 import {Eye, EyeClosed} from "lucide-react";
-import AxiosInstance from "@/lib/axios";
-import axios, {AxiosError} from "axios";
 import {toast} from "sonner";
+import {useMutation} from "@tanstack/react-query";
+import {loginUser} from "@/controllers/auth";
+import {useRouter} from "next/navigation";
 
 export default function LoginPage() {
 	const [showPass, setShowPass] = useState<boolean>(false);
@@ -36,19 +37,22 @@ export default function LoginPage() {
 		},
 	});
 
-	const submitHandler = async (values: z.infer<typeof loginSchema>) => {
-		try {
-			const response = await AxiosInstance.post("/auth/login", values);
-			toast.success(response.data.message);
-		} catch (error) {
-			if (axios.isAxiosError(error)) {
-				const axiosError = error as AxiosError<{message: string}>;
-				toast.error(axiosError.response?.data.message);
-			} else {
-				console.log(error);
-			}
-		}
-	};
+	const router = useRouter();
+
+	const {mutate, isPending} = useMutation({
+		mutationFn: ({email, password}: {email: string; password: string}) =>
+			loginUser<{message: string}>(email, password),
+		onSuccess: (data) => {
+			toast.success(data.message);
+			router.push("/dashboard", {scroll: true});
+		},
+		onError: (error) => {
+			toast.error(error.message);
+		},
+	});
+
+	const submitHandler = async (values: z.infer<typeof loginSchema>) =>
+		mutate(values);
 
 	return (
 		<div className="w-auto h-fit bg-white px-10 py-16 rounded-md shadow-md shadow-slate-200 space-y-4">
@@ -156,10 +160,8 @@ export default function LoginPage() {
 							className="hover:underline inline-block float-right">
 							Create an account
 						</Link>
-						<Button type="submit" className={`w-full`}>
-							{form.formState.isLoading && (
-								<LuLoaderCircle className="animate-spin" />
-							)}
+						<Button type="submit" className={`w-full`} disabled={isPending}>
+							{isPending && <LuLoaderCircle className="animate-spin" />}
 							Login
 						</Button>
 					</form>
