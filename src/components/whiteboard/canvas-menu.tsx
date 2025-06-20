@@ -9,7 +9,7 @@ interface ICanvasMenu {}
 
 const themeIcons: {icon: ReactNode; value: string}[] = [
 	{
-		icon: <Sun />,
+		icon: <Sun className="text-accent dark:text-accent-foreground" />,
 		value: "light",
 	},
 	{
@@ -28,19 +28,19 @@ export const CanvasMenu = ({}: ICanvasMenu) => {
 		<div className="fixed top-5 left-5 z-50">
 			<Popover>
 				<PopoverTrigger>
-					<Button className="cursor-pointer" variant={"outline"}>
+					<Button className="cursor-pointer" variant={"default"}>
 						<Menu />
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className="ml-5 mt-2 flex flex-col gap-5">
-					<button className="flex items-center gap-5 font-semibold">
+					<Button variant="outline" className="flex items-center gap-2 font-semibold cursor-pointer">
 						<Save className="size-5" />
 						Save
-					</button>
-					<button className="flex items-center gap-5 font-semibold">
+					</Button>
+					<Button variant="outline" className="flex items-center gap-2 font-semibold">
 						<Trash2 className="size-5" />
 						Clear canvas
-					</button>
+					</Button>
 					<div className="flex items-center justify-between">
 						<span>
 							<h1 className="font-semibold">Theme</h1>
@@ -60,7 +60,7 @@ export const CanvasMenu = ({}: ICanvasMenu) => {
 									key={index}
 									aria-label={item.value}
 									value={item.value}
-									className="cursor-pointer hover:bg-blue-100 data-[state=on]:bg-blue-300">
+									className="cursor-pointer hover:bg-primary/50 data-[state=on]:bg-primary">
 									{item.icon}
 								</ToggleGroupItem>
 							))}

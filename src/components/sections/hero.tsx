@@ -97,9 +97,9 @@ export const HeroSection = () => {
 						className="relative">
 						<div className="relative aspect-video overflow-hidden rounded-xl border shadow-xl">
 							<Image
-								src="/placeholder.svg?height=720&width=1280"
+								src="/assets/board-asset1.png"
 								alt="Whiteboard app interface"
-								className="object-cover"
+								className="w-full h-full object-contain"
 								width={100}
 								height={100}
 							/>

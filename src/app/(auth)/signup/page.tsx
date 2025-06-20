@@ -23,7 +23,7 @@ import {LuLoaderCircle} from "react-icons/lu";
 import {Eye, EyeClosed} from "lucide-react";
 import {useState} from "react";
 import {useMutation} from "@tanstack/react-query";
-import {regiserUser} from "@/controllers/auth";
+import {registerUser} from "@/controllers/auth";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
 
@@ -42,7 +42,7 @@ export default function SignupPage() {
 
 	const {mutate, isPending} = useMutation({
 		mutationFn: (values: z.infer<typeof signupSchema>) =>
-			regiserUser<{message: string}>(values),
+			registerUser<{message: string}>(values),
 		onSuccess: (data) => {
 			toast.success(data.message);
 			router.push("/login");

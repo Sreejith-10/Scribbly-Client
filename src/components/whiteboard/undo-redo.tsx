@@ -1,4 +1,4 @@
-import {useToolbarStore} from "@/stores/useToolbarStore";
+import {useToolbarStore} from "@/stores/canvas/useToolbarStore";
 import {Minus, Plus} from "lucide-react";
 import {BiRedo, BiUndo} from "react-icons/bi";
 

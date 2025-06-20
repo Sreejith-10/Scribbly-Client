@@ -120,7 +120,7 @@ export const NavBar = () => {
 						<Link href="/login">Log in</Link>
 					</Button>
 					<Button>
-						<Link href="/register">Sign up free</Link>
+						<Link href="/signup">Sign up free</Link>
 					</Button>
 				</div>
 			</div>

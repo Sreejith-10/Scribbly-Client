@@ -12,7 +12,7 @@ import {BiEraser} from "react-icons/bi";
 import {ReactNode} from "react";
 import {ActionType} from "@/types";
 import {Hand} from "lucide-react";
-import {useToolbarStore} from "@/stores";
+import {useToolbarStore} from "@/stores/canvas";
 
 interface Tools {
 	icon: ReactNode;
@@ -78,8 +78,8 @@ export const ToolBar = () => {
 						}
 					}}
 					aria-label={"move"}
-					className={`size-8 rounded-md hover:bg-blue-200 flex items-center justify-center ${
-						action === "move" ? "bg-blue-300" : "bg-white"
+					className={`size-8 rounded-md hover:bg-primary/50 flex items-center justify-center ${
+						action === "move" ? "bg-primary" : "bg-white"
 					}`}>
 					<Hand className="size-5" />
 				</div>
@@ -95,8 +95,8 @@ export const ToolBar = () => {
 						}}
 						aria-label={tool.value}
 						key={index}
-						className={`size-8 rounded-md hover:bg-blue-200 flex items-center justify-center ${
-							action === tool.value ? "bg-blue-300" : "bg-white"
+						className={`size-8 rounded-md hover:bg-primary/50 flex items-center justify-center ${
+							action === tool.value ? "bg-primary" : "bg-white"
 						}`}>
 						{tool.icon}
 					</div>

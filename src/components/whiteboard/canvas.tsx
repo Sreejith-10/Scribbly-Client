@@ -1,10 +1,9 @@
 import {cn} from "@/lib";
-import {useBoardStore} from "@/stores";
-import {useToolbarStore} from "@/stores";
-import {ActionType} from "@/types";
+import {useBoardStore, useToolbarStore} from "@/stores/canvas";
+import {ActionType, Shape} from "@/types";
 import Konva from "konva";
 import {KonvaEventObject} from "konva/lib/Node";
-import {useRef} from "react";
+import {Dispatch, SetStateAction, useCallback, useRef} from "react";
 import {
 	Stage,
 	Layer,
@@ -20,19 +19,22 @@ interface CanvasProps {
 	width?: number;
 	height?: number;
 	className?: string;
+	shapes: Shape[];
+	setShapes: Dispatch<SetStateAction<Shape[]>>;
+	addNewShape: (shape: Shape) => void;
 }
 
-const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
+const Canvas = ({
+	width,
+	height,
+	className,
+	shapes,
+	setShapes,
+	addNewShape,
+}: Readonly<CanvasProps>) => {
 	const {action, stroke, fill, setIsShapeSelected, strokeWidth} =
 		useToolbarStore();
-	const {
-		shapes,
-		setShapes,
-		addShape,
-		removeShape,
-		setCurrentShapeSelected,
-		removeSelectedShape,
-	} = useBoardStore();
+	const {setCurrentShapeSelected, removeSelectedShape} = useBoardStore();
 
 	const stageRef = useRef<Konva.Stage>(null);
 	const isPainting = useRef<boolean>(false);
@@ -41,10 +43,9 @@ const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
 	const tranformerRef = useRef<Konva.Transformer>(null);
 	const lastUpdateTime = useRef(0);
 	const throttleDelay = 50;
-
 	const isDraggable = action === ActionType.SELECT;
 
-	const pointerDownHandler = () => {
+	const pointerDownHandler = useCallback(() => {
 		if (["move", "select", "eraser"].includes(action)) return;
 
 		const stage = stageRef.current;
@@ -60,71 +61,86 @@ const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
 
 		switch (action) {
 			case ActionType.RECTANGLE:
-				addShape({
-					id,
-					type,
-					x: position?.x,
-					y: position?.y,
-					width: 0,
-					height: 0,
-					stroke: stroke,
-					fill,
-					strokeWidth,
-				});
+				setShapes((prev) => [
+					...prev,
+					{
+						id,
+						type,
+						x: position?.x,
+						y: position?.y,
+						width: 0,
+						height: 0,
+						stroke: stroke,
+						fill,
+						strokeWidth,
+					},
+				]);
 				break;
 
 			case ActionType.CIRCLE:
-				addShape({
-					id,
-					type,
-					x: position?.x,
-					y: position?.y,
-					radius: 0,
-					stroke: stroke,
-					fill,
-					strokeWidth,
-				});
+				setShapes((prev) => [
+					...prev,
+					{
+						id,
+						type,
+						x: position?.x,
+						y: position?.y,
+						radius: 0,
+						stroke: stroke,
+						fill,
+						strokeWidth,
+					},
+				]);
 				break;
 
 			case ActionType.ARROW:
-				addShape({
-					id,
-					type,
-					points: [position.x, position.y, position.x + 20, position.y + 20],
-					stroke: stroke,
-					strokeWidth,
-				});
+				setShapes((prev) => [
+					...prev,
+					{
+						id,
+						type,
+						points: [position.x, position.y, position.x + 20, position.y + 20],
+						stroke: stroke,
+						strokeWidth,
+					},
+				]);
 				break;
 
 			case ActionType.FREE:
-				addShape({
-					id,
-					type,
-					points: [position.x ?? 0, position.y ?? 0],
-					fill: stroke,
-					lineCap: "round",
-					lineJoin: "round",
-					stroke: stroke,
-					strokeWidth,
-				});
+				setShapes((prev) => [
+					...prev,
+					{
+						id,
+						type,
+						points: [position.x ?? 0, position.y ?? 0],
+						fill: stroke,
+						lineCap: "round",
+						lineJoin: "round",
+						stroke: stroke,
+						strokeWidth,
+					},
+				]);
 				break;
 
 			case ActionType.LINE:
-				addShape({
-					id,
-					type,
-					points: [position.x, position.y, position.x, position.y],
-					stroke: stroke,
-					strokeWidth,
-				});
+				setShapes((prev) => [
+					...prev,
+					{
+						id,
+						type,
+						points: [position.x, position.y, position.x, position.y],
+						stroke: stroke,
+						strokeWidth,
+					},
+				]);
 				break;
 
 			default:
 				break;
 		}
-	};
+	}, [action, fill, stroke, strokeWidth]);
 
-	const pointerMoveHandler = () => {
+	const pointerMoveHandler = useCallback(() => {
 		if (["move", "select", "eraser"].includes(action)) return;
 
 		const now = new Date().getTime();
@@ -179,14 +195,19 @@ const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
 		});
 
 		setShapes(updatedShapes);
-	};
+	}, [action, shapes]);
 
-	const pointerUpHandler = () => {
+	const pointerUpHandler = useCallback(() => {
+		const shape = shapes?.find((shape) => shape.id === currentShapeId.current);
+		if (shape) {
+			addNewShape(shape);
+		}
+
 		isPainting.current = false;
 		currentShapeId.current = null;
 		initialPosition.current = null;
 		removeSelectedShape();
-	};
+	}, [shapes]);
 
 	const onclickHandler = (e: KonvaEventObject<MouseEvent>) => {
 		const target = e.currentTarget;
@@ -199,7 +220,7 @@ const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
 				setCurrentShapeSelected(id);
 			}
 		} else if (action === ActionType.ERASER) {
-			removeShape(id);
+			setShapes((prev) => prev.filter((shape) => shape.id !== id));
 		}
 	};
 
@@ -249,7 +270,7 @@ const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
 							);
 						case ActionType.ARROW:
 							return (
-								//@ts-expect-error error
+								// @ts-expect-error error
 								<Arrow
 									{...shape}
 									key={shape.id}
@@ -275,7 +296,7 @@ const Canvas = ({width, height, className}: Readonly<CanvasProps>) => {
 									id={shape.id}
 									draggable={isDraggable}
 									onClick={onclickHandler}
-									tension={.5}
+									tension={0.5}
 								/>
 							);
 						default:

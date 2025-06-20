@@ -9,4 +9,16 @@ const AxiosInstance = axios.create({
 	withCredentials: true,
 });
 
-export default AxiosInstance;
+AxiosInstance.interceptors.response.use(
+	(response) => response,
+	(error) => {
+		if (error.response?.status === 401 && typeof window !== "undefined") {
+			if (!window.location.pathname.includes("/login")) {
+				window.location.href = "/login";
+			}
+		}
+		return Promise.reject(error);
+	}
+);
+
+export {AxiosInstance};

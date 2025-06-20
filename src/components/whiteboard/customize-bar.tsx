@@ -8,8 +8,7 @@ import {
 	LuArrowUp,
 	LuArrowUpToLine,
 } from "react-icons/lu";
-import {useToolbarStore} from "@/stores";
-import {useBoardStore} from "@/stores";
+import {useToolbarStore, useBoardStore} from "@/stores/canvas";
 
 const presetColors = ["#000", "#ff0000", "#43A047", "#ffff00", "#1e88e5"];
 const presetBgColors = ["#ff0000", "#43A047", "#ffff00", "#1e88e5"];

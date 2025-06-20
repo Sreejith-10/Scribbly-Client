@@ -1,18 +1,7 @@
 "use client";
 
 import {useState} from "react";
-import {
-	Plus,
-	Search,
-	Users,
-	Clock,
-	Grid3X3,
-	List,
-	Filter,
-	Lock,
-	UserPlus,
-	User,
-} from "lucide-react";
+import {Plus, Search, Users, Clock, Grid3X3, List, Filter} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
@@ -33,22 +22,11 @@ import {
 import {AppSidebar} from "@/components/dashboard/appsidebar";
 import {BoardCard} from "@/components/dashboard/board-card";
 import {ThemeToggle} from "@/components/ui/theme-toggle";
-import {
-	Dialog,
-	DialogContent,
-	DialogFooter,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import {Textarea} from "@/components/ui/textarea";
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import {Label} from "@/components/ui/label";
+import {BoardCreation} from "@/components/dashboard/board-creation";
+import {useQuery} from "@tanstack/react-query";
+import {getBoardMetadata} from "@/controllers/board";
+import {IBoardMetadata} from "@/types";
+import Link from "next/link";
 
 const recentBoards = [
 	{
@@ -104,27 +82,6 @@ const sharedBoards = [
 	},
 ];
 
-const templates = [
-	{
-		id: 7,
-		title: "Brainstorming",
-		description: "Perfect for ideation sessions",
-		thumbnail: "/placeholder.svg?height=120&width=200",
-	},
-	{
-		id: 8,
-		title: "Kanban Board",
-		description: "Organize tasks and workflows",
-		thumbnail: "/placeholder.svg?height=120&width=200",
-	},
-	{
-		id: 9,
-		title: "Mind Map",
-		description: "Visualize ideas and connections",
-		thumbnail: "/placeholder.svg?height=120&width=200",
-	},
-];
-
 function CreateBoardDialog({onclick}: {onclick: () => void}) {
 	return (
 		<Card
@@ -144,52 +101,19 @@ function CreateBoardDialog({onclick}: {onclick: () => void}) {
 export default function Dashboard() {
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 	const [searchQuery, setSearchQuery] = useState("");
-	const [createBoardDialog, setCreateBoardDialog] = useState(false);
+	const [openDialog, setOpenDialog] = useState<boolean>(false);
+
+	const {data, isLoading, error} = useQuery({
+		queryKey: ["board_metadata"],
+		queryFn: getBoardMetadata<{boardMetadatas: IBoardMetadata[]}>,
+	});
 
 	return (
 		<>
-			<Dialog
-				open={createBoardDialog}
-				onOpenChange={(state) => setCreateBoardDialog(state)}>
-				<DialogContent className="flexflex-col gap-3">
-					<DialogTitle className="text-center">Create new board</DialogTitle>
-					<div className="space-y-2">
-						<Label>Title</Label>
-						<Input type="text" />
-					</div>
-					<div className="space-y-2">
-						<Label>Description</Label>
-						<Textarea />
-					</div>
-					<div className="space-y-2">
-						<Label>Status</Label>
-						<Select defaultValue="private">
-							<SelectTrigger className="w-full">
-								<SelectValue defaultValue="" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectGroup>
-									<SelectItem value="private">
-										<Lock />
-										Private
-									</SelectItem>
-									<SelectItem value="request_access">
-										<UserPlus />
-										Request Access
-									</SelectItem>
-									<SelectItem value="public">
-										<User />
-										Public
-									</SelectItem>
-								</SelectGroup>
-							</SelectContent>
-						</Select>
-					</div>
-					<DialogFooter className="text-center">
-						<Button className="w-full cursor-pointer">Create</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			<BoardCreation
+				open={openDialog}
+				setOpen={(state: boolean) => setOpenDialog(state)}
+			/>
 			<SidebarProvider>
 				<AppSidebar />
 				<SidebarInset>
@@ -208,7 +132,7 @@ export default function Dashboard() {
 							</div>
 							<Button
 								className="cursor-pointer"
-								onClick={() => setCreateBoardDialog(true)}>
+								onClick={() => setOpenDialog(true)}>
 								<Plus className="size-4 mr-2" />
 								New Board
 							</Button>
@@ -273,79 +197,13 @@ export default function Dashboard() {
 								</p>
 							</div>
 						</div>
-
 						<Tabs defaultValue="all" className="w-full">
 							<TabsList className="grid w-full grid-cols-4">
 								<TabsTrigger value="all">All Boards</TabsTrigger>
 								<TabsTrigger value="recent">Recent</TabsTrigger>
-								<TabsTrigger value="shared">Shared with me</TabsTrigger>
-								<TabsTrigger value="templates">Templates</TabsTrigger>
+								<TabsTrigger value="private">Private</TabsTrigger>
+								<TabsTrigger value="public">Public</TabsTrigger>
 							</TabsList>
-
-							<TabsContent value="recent" className="space-y-4">
-								<div className="flex items-center justify-between">
-									<h2 className="text-lg font-semibold">Recent boards</h2>
-									<Button variant="ghost" size="sm">
-										View all
-									</Button>
-								</div>
-								<div
-									className={`grid gap-4 ${
-										viewMode === "grid"
-											? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-											: "grid-cols-1"
-									}`}>
-									<CreateBoardDialog
-										onclick={() => setCreateBoardDialog(true)}
-									/>
-									{recentBoards.map((board) => (
-										<BoardCard key={board.id} board={board} type="recent" />
-									))}
-								</div>
-							</TabsContent>
-
-							<TabsContent value="shared" className="space-y-4">
-								<div className="flex items-center justify-between">
-									<h2 className="text-lg font-semibold">Shared with me</h2>
-									<Button variant="ghost" size="sm">
-										View all
-									</Button>
-								</div>
-								<div
-									className={`grid gap-4 ${
-										viewMode === "grid"
-											? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-											: "grid-cols-1"
-									}`}>
-									{sharedBoards.map((board) => (
-										<BoardCard key={board.id} board={board} type="shared" />
-									))}
-								</div>
-							</TabsContent>
-
-							<TabsContent value="templates" className="space-y-4">
-								<div className="flex items-center justify-between">
-									<h2 className="text-lg font-semibold">Templates</h2>
-									<Button variant="ghost" size="sm">
-										Browse all
-									</Button>
-								</div>
-								<div
-									className={`grid gap-4 ${
-										viewMode === "grid"
-											? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-											: "grid-cols-1"
-									}`}>
-									{templates.map((template) => (
-										<BoardCard
-											key={template.id}
-											board={template}
-											type="template"
-										/>
-									))}
-								</div>
-							</TabsContent>
-
 							<TabsContent value="all" className="space-y-4">
 								<div className="flex items-center justify-between">
 									<h2 className="text-lg font-semibold">All boards</h2>
@@ -361,16 +219,104 @@ export default function Dashboard() {
 											? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
 											: "grid-cols-1"
 									}`}>
-									<CreateBoardDialog
-										onclick={() => setCreateBoardDialog(true)}
-									/>
-									{[...recentBoards, ...sharedBoards].map((board) => (
-										<BoardCard key={board.id} board={board} type="recent" />
+									<CreateBoardDialog onclick={() => setOpenDialog(true)} />
+									{data?.boardMetadatas.map((board) => (
+										<Link
+											href={`/board/${
+												board.accessMode === "private" ? "private" : "public"
+											}/${board.boardId}`}
+											key={board.boardId}>
+											<BoardCard board={board} type="recent" />
+										</Link>
 									))}
 								</div>
 							</TabsContent>
+							<TabsContent value="recent" className="space-y-4">
+								<div className="flex items-center justify-between">
+									<h2 className="text-lg font-semibold">Recent boards</h2>
+									<Button variant="ghost" size="sm">
+										View all
+									</Button>
+								</div>
+								<div
+									className={`grid gap-4 ${
+										viewMode === "grid"
+											? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+											: "grid-cols-1"
+									}`}>
+									<CreateBoardDialog onclick={() => setOpenDialog(true)} />
+									{data?.boardMetadatas
+										.sort((a, b) => {
+											const d1 = new Date(a.createdAt);
+											const d2 = new Date(b.createdAt);
+											return d1.getTime() - d2.getTime();
+										})
+										.map((board) => (
+											<Link
+												href={`/board/${
+													board.accessMode === "private" ? "private" : "public"
+												}/${board.boardId}`}
+												key={board.boardId}>
+												<BoardCard board={board} type="recent" />
+											</Link>
+										))}
+								</div>
+							</TabsContent>
+							<TabsContent value="private" className="space-y-4">
+								<div className="flex items-center justify-between">
+									<h2 className="text-lg font-semibold">Private</h2>
+									<Button variant="ghost" size="sm">
+										View all
+									</Button>
+								</div>
+								<div
+									className={`grid gap-4 ${
+										viewMode === "grid"
+											? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+											: "grid-cols-1"
+									}`}>
+									<CreateBoardDialog onclick={() => setOpenDialog(true)} />
+									{data?.boardMetadatas
+										.filter((meta) => meta.accessMode === "private")
+										.map((board) => (
+											<Link
+												href={`/board/${
+													board.accessMode === "private" ? "private" : "public"
+												}/${board.boardId}`}
+												key={board.boardId}>
+												<BoardCard board={board} type="private" />
+											</Link>
+										))}
+								</div>
+							</TabsContent>
+							<TabsContent value="public" className="space-y-4">
+								<div className="flex items-center justify-between">
+									<h2 className="text-lg font-semibold">Public</h2>
+									<Button variant="ghost" size="sm">
+										View all
+									</Button>
+								</div>
+								<div
+									className={`grid gap-4 ${
+										viewMode === "grid"
+											? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+											: "grid-cols-1"
+									}`}>
+									<CreateBoardDialog onclick={() => setOpenDialog(true)} />
+									{data?.boardMetadatas
+										.filter((meta) => meta.accessMode === "public")
+										.map((board) => (
+											<Link
+												href={`/board/${
+													board.accessMode === "private" ? "private" : "public"
+												}/${board.boardId}`}
+												key={board.boardId}>
+												<BoardCard board={board} type="public" />
+											</Link>
+										))}
+								</div>
+							</TabsContent>
 						</Tabs>
-
 						<div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
