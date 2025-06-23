@@ -73,5 +73,35 @@ export const useBoardState = (id: string) => {
 		},
 	});
 
-	return {currentState, addNewShape, editShape, removeShape, snapShot};
+	const {mutate: resizeShape} = useMutation({
+		mutationFn: (shape: Shape) => updateShape(id, shape),
+		onMutate: (shape) => {
+			queryClient.setQueryData([BOARD_STATE, id], (old: IBoardState) => ({
+				...old,
+				currentState: {...old.currentState, [shape.id]: {...shape}},
+				// Delta is needed to be updated here
+			}));
+		},
+	});
+
+	const {mutate: moveShape} = useMutation({
+		mutationFn: (shape: Shape) => updateShape(id, shape),
+		onMutate: (shape) => {
+			queryClient.setQueryData([BOARD_STATE, id], (old: IBoardState) => ({
+				...old,
+				currentState: {...old.currentState, [shape.id]: {...shape}},
+				// Delta is needed to be updated here
+			}));
+		},
+	});
+
+	return {
+		currentState,
+		addNewShape,
+		editShape,
+		removeShape,
+		snapShot,
+		resizeShape,
+		moveShape,
+	};
 };

@@ -17,8 +17,15 @@ const Canvas = dynamic(() => import("@/components/whiteboard/canvas"), {
 export default function Page() {
 	const action = useToolbarStore((state) => state.action);
 	const {id} = useParams<{id: string}>();
-	const {currentState, addNewShape, editShape, removeShape, snapShot} =
-		useBoardState(id);
+	const {
+		currentState,
+		addNewShape,
+		editShape,
+		removeShape,
+		snapShot,
+		resizeShape,
+		moveShape,
+	} = useBoardState(id);
 
 	const deltaActions = (delta: DeltaProp) => {
 		switch (delta.operation) {
@@ -29,12 +36,14 @@ export default function Page() {
 				editShape(delta.data);
 			case "delete":
 				removeShape(delta.data);
+			case "resize":
+				resizeShape(delta.data);
+			case "move":
+				moveShape(delta.data);
 			default:
 				break;
 		}
 	};
-
-	console.log(currentState);
 
 	return (
 		<div className="w-full h-screen relative">

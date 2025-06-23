@@ -66,8 +66,8 @@ const Canvas = ({
 					...prev!,
 					id,
 					type,
-					x: position?.x,
-					y: position?.y,
+					x: position.x,
+					y: position.y,
 					width: 0,
 					height: 0,
 					stroke: stroke,
@@ -81,8 +81,8 @@ const Canvas = ({
 					...prev,
 					id,
 					type,
-					x: position?.x,
-					y: position?.y,
+					x: position.x,
+					y: position.y,
 					radius: 0,
 					stroke: stroke,
 					fill,
@@ -106,7 +106,7 @@ const Canvas = ({
 					...prev,
 					id,
 					type,
-					points: [position.x ?? 0, position.y ?? 0],
+					points: [position.x, position.y],
 					fill: stroke,
 					lineCap: "round",
 					lineJoin: "round",
@@ -147,8 +147,8 @@ const Canvas = ({
 				case ActionType.RECTANGLE:
 					setDraftShape((prev) => ({
 						...prev!,
-						width: (position?.x ?? 0) - initialPosition.current!.x,
-						height: (position?.y ?? 0) - initialPosition.current!.y,
+						width: position?.x - initialPosition.current!.x,
+						height: position?.y - initialPosition.current!.y,
 					}));
 					break;
 
@@ -156,8 +156,8 @@ const Canvas = ({
 					setDraftShape((prev) => ({
 						...prev!,
 						radius: Math.sqrt(
-							Math.pow((position?.x ?? 0) - (prev?.x ?? 0), 2) +
-								Math.pow((position?.y ?? 0) - (prev?.y ?? 0), 2)
+							Math.pow(position?.x - (prev?.y ?? 0), 2) +
+								Math.pow(position?.y - (prev?.y ?? 0), 2)
 						),
 					}));
 					break;
@@ -165,31 +165,23 @@ const Canvas = ({
 				case ActionType.ARROW:
 					setDraftShape((prev) => ({
 						...prev!,
-						points: [
-							prev?.points[0],
-							prev?.points[1],
-							position?.x ?? 0,
-							position?.y ?? 0,
-						],
+						points: [prev?.points[0], prev?.points[1], position.x, position?.y],
 					}));
 					break;
 
 				case ActionType.LINE:
 					setDraftShape((prev) => ({
 						...prev!,
-						points: [
-							prev?.points[0],
-							prev?.points[1],
-							position?.x ?? 0,
-							position?.y ?? 0,
-						],
+						points: [prev?.points[0], prev?.points[1], position.x, position.y],
 					}));
 					break;
 
 				case ActionType.FREE:
+					console.log(draftShape.points);
+
 					setDraftShape((prev) => ({
 						...prev!,
-						points: [...prev?.points, position?.x ?? 0, position?.x ?? 0],
+						points: [...prev?.points, position?.x, position?.y],
 					}));
 					break;
 
@@ -211,10 +203,9 @@ const Canvas = ({
 	}, [draftShape]);
 
 	const onclickHandler = (e: KonvaEventObject<MouseEvent>) => {
+		e.cancelBubble = true;
 		const target = e.currentTarget;
 		const id = target.id();
-
-		const shape = shapes.find((shape) => shape.id === id);
 
 		if (action === ActionType.SELECT) {
 			if (target) {
@@ -223,8 +214,9 @@ const Canvas = ({
 				setCurrentShapeSelected(id);
 			}
 		} else if (action === ActionType.ERASER) {
+			const shape = shapes.find((shape) => shape.id === id);
+
 			if (shape) handleDelta({operation: "update", data: shape});
-			// setShapes((prev) => prev.filter((shape) => shape.id !== id));
 		}
 	};
 
@@ -286,6 +278,82 @@ const Canvas = ({
 		}
 	};
 
+	const onDragEndHandler = useCallback(
+		(e: KonvaEventObject<DragEvent>) => {
+			const node = e.target;
+			const id = node.id();
+			const position = node.getPosition();
+
+			const shape = shapes.find((shape) => shape.id === id);
+
+			handleDelta({
+				operation: "move",
+				data: {
+					...shape!,
+					x: position.x,
+					y: position.y,
+				},
+			});
+		},
+		[handleDelta, shapes]
+	);
+
+	const onTransformEndHandler = useCallback(
+		(e: KonvaEventObject<Event>) => {
+			const node = e.target;
+			const id = node.id();
+			const position = node.getPosition();
+			const shape = shapes.find((shape) => shape.id === id);
+
+			if (!shape) return;
+
+			let updateData: Shape | {id: string} = {id: shape.id};
+
+			switch (shape.type) {
+				case ActionType.RECTANGLE:
+					updateData = {
+						...shape,
+						x: position.x,
+						y: position.y,
+						width: node.width() * node.scaleX(),
+						height: node.height() * node.scaleY(),
+					};
+					break;
+				case ActionType.CIRCLE:
+					updateData = {
+						...shape,
+						x: position.x,
+						y: position.y,
+						radius: Math.max(5, (shape.radius || 0) * node.scaleX()),
+					};
+					break;
+				case ActionType.ARROW:
+				case ActionType.LINE:
+				case ActionType.FREE:
+					updateData = {
+						...shape,
+						x: position.x,
+						y: position.y,
+						scaleX: node.scaleX(),
+						scaleY: node.scaleY(),
+					};
+					break;
+				default:
+					break;
+			}
+
+			handleDelta({
+				operation: "resize",
+				data: updateData as Shape,
+			});
+
+			// Resetting scale to avoid compounding
+			node.scaleX(1);
+			node.scaleY(1);
+		},
+		[shapes, handleDelta]
+	);
+
 	return (
 		<Stage
 			ref={stageRef}
@@ -318,6 +386,11 @@ const Canvas = ({
 									id={shape.id}
 									draggable={isDraggable}
 									onClick={onclickHandler}
+									onDragStart={() => {
+										console.log("drag");
+									}}
+									onDragEnd={onDragEndHandler}
+									onTransformEnd={onTransformEndHandler}
 								/>
 							);
 						case ActionType.CIRCLE:
@@ -328,6 +401,8 @@ const Canvas = ({
 									id={shape.id}
 									draggable={isDraggable}
 									onClick={onclickHandler}
+									onDragEnd={onDragEndHandler}
+									onTransformEnd={onTransformEndHandler}
 								/>
 							);
 						case ActionType.ARROW:
@@ -339,6 +414,8 @@ const Canvas = ({
 									id={shape.id}
 									draggable={isDraggable}
 									onClick={onclickHandler}
+									onDragEnd={onDragEndHandler}
+									onTransformEnd={onTransformEndHandler}
 								/>
 							);
 						case ActionType.LINE:
@@ -348,6 +425,8 @@ const Canvas = ({
 									{...shape}
 									draggable={isDraggable}
 									onClick={(e) => onclickHandler(e)}
+									onDragEnd={onDragEndHandler}
+									onTransformEnd={onTransformEndHandler}
 								/>
 							);
 						case ActionType.FREE:
@@ -359,6 +438,8 @@ const Canvas = ({
 									draggable={isDraggable}
 									onClick={onclickHandler}
 									tension={0.5}
+									onDragEnd={onDragEndHandler}
+									onTransformEnd={onTransformEndHandler}
 								/>
 							);
 						default:
@@ -368,7 +449,16 @@ const Canvas = ({
 
 				{renderDraft()}
 
-				<Transformer ref={tranformerRef} keepRatio={true} />
+				<Transformer
+					ref={tranformerRef}
+					keepRatio={false}
+					boundBoxFunc={(oldBox, newBox) => {
+						if (newBox.width < 5 || newBox.height < 5) {
+							return oldBox;
+						}
+						return newBox;
+					}}
+				/>
 			</Layer>
 		</Stage>
 	);

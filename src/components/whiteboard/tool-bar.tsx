@@ -13,6 +13,7 @@ import {ReactNode} from "react";
 import {ActionType} from "@/types";
 import {Hand} from "lucide-react";
 import {useToolbarStore} from "@/stores/canvas";
+import {Tooltip, TooltipContent, TooltipTrigger} from "../ui/tooltip";
 
 interface Tools {
 	icon: ReactNode;
@@ -68,37 +69,50 @@ export const ToolBar = () => {
 	return (
 		<div className="w-fit h-auto p-2 rounded-lg shadow-md bg-white border border-zinc-300 border-opacity-30 fixed top-5 left-1/2 -translate-x-1/2 z-9">
 			<div className="flex w-full gap-2 cursor-pointer">
-				<div
-					onClick={() => {
-						setAction("move" as ActionType);
-						if (!["select", "eraser", "move"].includes("move")) {
-							setToolSelected(true);
-						} else {
-							setToolSelected(false);
-						}
-					}}
-					aria-label={"move"}
-					className={`size-8 rounded-md hover:bg-primary/50 flex items-center justify-center ${
-						action === "move" ? "bg-primary" : "bg-white"
-					}`}>
-					<Hand className="size-5" />
+				<div className="relative">
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<div
+								onClick={() => {
+									setAction("move" as ActionType);
+									if (!["select", "eraser", "move"].includes("move")) {
+										setToolSelected(true);
+									} else {
+										setToolSelected(false);
+									}
+								}}
+								aria-label={"move"}
+								className={`size-8 rounded-md hover:bg-primary/50 flex items-center justify-center ${
+									action === "move" ? "bg-primary" : "bg-white"
+								}`}>
+								<Hand className="size-5" />
+							</div>
+						</TooltipTrigger>
+						<TooltipContent>move</TooltipContent>
+					</Tooltip>
 				</div>
 				{tools.map((tool, index) => (
-					<div
-						onClick={() => {
-							setAction(tool.value as ActionType);
-							if (!["select", "eraser", "move"].includes(tool.value)) {
-								setToolSelected(true);
-							} else {
-								setToolSelected(false);
-							}
-						}}
-						aria-label={tool.value}
-						key={index}
-						className={`size-8 rounded-md hover:bg-primary/50 flex items-center justify-center ${
-							action === tool.value ? "bg-primary" : "bg-white"
-						}`}>
-						{tool.icon}
+					<div key={index} className="relative">
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<div
+									onClick={() => {
+										setAction(tool.value as ActionType);
+										if (!["select", "eraser", "move"].includes(tool.value)) {
+											setToolSelected(true);
+										} else {
+											setToolSelected(false);
+										}
+									}}
+									aria-label={tool.value}
+									className={`size-8 rounded-md hover:bg-primary/50 flex items-center justify-center ${
+										action === tool.value ? "bg-primary" : "bg-white"
+									}`}>
+									{tool.icon}
+								</div>
+							</TooltipTrigger>
+							<TooltipContent>{tool.value as string}</TooltipContent>
+						</Tooltip>
 					</div>
 				))}
 			</div>

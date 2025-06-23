@@ -45,7 +45,7 @@ export interface IBoardState {
 	currentState: CurrentState;
 }
 
-export type Operation = "create" | "update" | "delete";
+export type Operation = "create" | "update" | "delete" | "move" | "resize";
 
 export interface DeltaProp {
 	data: Shape;
