@@ -5,7 +5,9 @@ import {ToggleGroup, ToggleGroupItem} from "../ui/toggle-group";
 import {ReactNode} from "react";
 import {useTheme} from "next-themes";
 
-interface ICanvasMenu {}
+interface ICanvasMenu {
+	onSave: () => void;
+}
 
 const themeIcons: {icon: ReactNode; value: string}[] = [
 	{
@@ -22,7 +24,7 @@ const themeIcons: {icon: ReactNode; value: string}[] = [
 	},
 ];
 
-export const CanvasMenu = ({}: ICanvasMenu) => {
+export const CanvasMenu = ({onSave}: ICanvasMenu) => {
 	const {theme, setTheme, systemTheme} = useTheme();
 	return (
 		<div className="fixed top-5 left-5 z-50">
@@ -33,11 +35,16 @@ export const CanvasMenu = ({}: ICanvasMenu) => {
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className="ml-5 mt-2 flex flex-col gap-5">
-					<Button variant="outline" className="flex items-center gap-2 font-semibold cursor-pointer">
+					<Button
+						onClick={onSave}
+						variant="outline"
+						className="flex items-center gap-2 font-semibold cursor-pointer">
 						<Save className="size-5" />
 						Save
 					</Button>
-					<Button variant="outline" className="flex items-center gap-2 font-semibold">
+					<Button
+						variant="outline"
+						className="flex items-center gap-2 font-semibold">
 						<Trash2 className="size-5" />
 						Clear canvas
 					</Button>

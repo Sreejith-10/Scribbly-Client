@@ -4,14 +4,11 @@ import {CanvasMenu} from "@/components/whiteboard/canvas-menu";
 import {CustomizeBar} from "@/components/whiteboard/customize-bar";
 import {ToolBar} from "@/components/whiteboard/tool-bar";
 import {UndoRedo} from "@/components/whiteboard/undo-redo";
-import {addShape} from "@/controllers/board";
 import {useBoardState} from "@/hooks/query";
 import {useToolbarStore} from "@/stores/canvas/useToolbarStore";
-import {Shape} from "@/types";
-import {useMutation} from "@tanstack/react-query";
+import {DeltaProp} from "@/types";
 import dynamic from "next/dynamic";
 import {useParams} from "next/navigation";
-import {useState} from "react";
 
 const Canvas = dynamic(() => import("@/components/whiteboard/canvas"), {
 	ssr: false,
@@ -19,16 +16,30 @@ const Canvas = dynamic(() => import("@/components/whiteboard/canvas"), {
 
 export default function Page() {
 	const action = useToolbarStore((state) => state.action);
-	const [shapes, setShapes] = useState<Shape[]>([]);
 	const {id} = useParams<{id: string}>();
-	const {currentState, addNewShape} = useBoardState(id);
+	const {currentState, addNewShape, editShape, removeShape, snapShot} =
+		useBoardState(id);
+
+	const deltaActions = (delta: DeltaProp) => {
+		switch (delta.operation) {
+			case "create":
+				addNewShape(delta.data);
+				break;
+			case "update":
+				editShape(delta.data);
+			case "delete":
+				removeShape(delta.data);
+			default:
+				break;
+		}
+	};
 
 	console.log(currentState);
 
 	return (
 		<div className="w-full h-screen relative">
 			<ToolBar />
-			<CanvasMenu />
+			<CanvasMenu onSave={snapShot} />
 			{!["select", "move", "eraser"].includes(action) && <CustomizeBar />}
 			<Canvas
 				width={window.innerWidth}
@@ -39,11 +50,7 @@ export default function Page() {
 						? Object.values(currentState?.currentState)
 						: []
 				}
-				setShapes={setShapes}
-				addNewShape={
-					(shape) => console.log(shape)
-					// addNewShape(shape)
-				}
+				handleDelta={(delta: DeltaProp) => deltaActions(delta)}
 			/>
 			<div className="fixed bottom-14 left-5">
 				<UndoRedo />

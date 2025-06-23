@@ -1,5 +1,5 @@
 import {AxiosInstance, handleAxiosError} from "@/lib";
-import {AccessMode, Shape} from "@/types";
+import {AccessMode, IBoardState, Shape} from "@/types";
 
 const getBoard = async () => {
 	try {
@@ -45,7 +45,10 @@ const getBoardState = async <T>(boardId: string): Promise<T> => {
 	}
 };
 
-const addShape = async (boardId: string, shape: Shape) => {
+const addShape = async (
+	boardId: string,
+	shape: Shape
+): Promise<IBoardState> => {
 	try {
 		const resposnse = await AxiosInstance.post(`/boards/${boardId}/shapes`, {
 			shapeId: shape.id,
@@ -74,8 +77,17 @@ const updateShape = async (boardId: string, shape: Shape) => {
 const deleteShape = async (boardId: string, shapeId: string) => {
 	try {
 		const response = await AxiosInstance.delete(
-			`/boards/${boardId}/shapes:/${shapeId}`
+			`/boards/${boardId}/shapes/${shapeId}`
 		);
+		return response.data;
+	} catch (error) {
+		handleAxiosError(error);
+	}
+};
+
+const createSnapShot = async (boardId: string) => {
+	try {
+		const response = await AxiosInstance.patch(`/boards/${boardId}/snapshot`);
 		return response.data;
 	} catch (error) {
 		handleAxiosError(error);
@@ -90,4 +102,5 @@ export {
 	addShape,
 	updateShape,
 	deleteShape,
+	createSnapShot,
 };

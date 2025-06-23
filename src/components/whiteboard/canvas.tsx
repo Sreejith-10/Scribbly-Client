@@ -1,9 +1,9 @@
 import {cn} from "@/lib";
 import {useBoardStore, useToolbarStore} from "@/stores/canvas";
-import {ActionType, Shape} from "@/types";
+import {ActionType, DeltaProp, Shape} from "@/types";
 import Konva from "konva";
 import {KonvaEventObject} from "konva/lib/Node";
-import {Dispatch, SetStateAction, useCallback, useRef} from "react";
+import {useCallback, useRef, useState} from "react";
 import {
 	Stage,
 	Layer,
@@ -20,8 +20,7 @@ interface CanvasProps {
 	height?: number;
 	className?: string;
 	shapes: Shape[];
-	setShapes: Dispatch<SetStateAction<Shape[]>>;
-	addNewShape: (shape: Shape) => void;
+	handleDelta: (delta: DeltaProp) => void;
 }
 
 const Canvas = ({
@@ -29,9 +28,10 @@ const Canvas = ({
 	height,
 	className,
 	shapes,
-	setShapes,
-	addNewShape,
+	handleDelta,
 }: Readonly<CanvasProps>) => {
+	const [draftShape, setDraftShape] = useState<Shape | null>(null);
+
 	const {action, stroke, fill, setIsShapeSelected, strokeWidth} =
 		useToolbarStore();
 	const {setCurrentShapeSelected, removeSelectedShape} = useBoardStore();
@@ -49,11 +49,12 @@ const Canvas = ({
 		if (["move", "select", "eraser"].includes(action)) return;
 
 		const stage = stageRef.current;
-		const position = stage?.getPointerPosition();
+		if (!stage) return;
 
+		const position = stage.getPointerPosition();
 		if (!position) return;
 
-		initialPosition.current = {...position!};
+		initialPosition.current = {...position};
 		const id = crypto.randomUUID();
 		const type = action;
 		currentShapeId.current = id;
@@ -61,78 +62,68 @@ const Canvas = ({
 
 		switch (action) {
 			case ActionType.RECTANGLE:
-				setShapes((prev) => [
-					...prev,
-					{
-						id,
-						type,
-						x: position?.x,
-						y: position?.y,
-						width: 0,
-						height: 0,
-						stroke: stroke,
-						fill,
-						strokeWidth,
-					},
-				]);
+				setDraftShape((prev) => ({
+					...prev!,
+					id,
+					type,
+					x: position?.x,
+					y: position?.y,
+					width: 0,
+					height: 0,
+					stroke: stroke,
+					fill,
+					strokeWidth,
+				}));
 				break;
 
 			case ActionType.CIRCLE:
-				setShapes((prev) => [
+				setDraftShape((prev) => ({
 					...prev,
-					{
-						id,
-						type,
-						x: position?.x,
-						y: position?.y,
-						radius: 0,
-						stroke: stroke,
-						fill,
-						strokeWidth,
-					},
-				]);
+					id,
+					type,
+					x: position?.x,
+					y: position?.y,
+					radius: 0,
+					stroke: stroke,
+					fill,
+					strokeWidth,
+				}));
 				break;
 
 			case ActionType.ARROW:
-				setShapes((prev) => [
+				setDraftShape((prev) => ({
 					...prev,
-					{
-						id,
-						type,
-						points: [position.x, position.y, position.x + 20, position.y + 20],
-						stroke: stroke,
-						strokeWidth,
-					},
-				]);
+					id,
+					type,
+					points: [position.x, position.y, position.x + 20, position.y + 20],
+					stroke: stroke,
+					strokeWidth,
+				}));
 				break;
 
 			case ActionType.FREE:
-				setShapes((prev) => [
+				setDraftShape((prev) => ({
 					...prev,
-					{
-						id,
-						type,
-						points: [position.x ?? 0, position.y ?? 0],
-						fill: stroke,
-						lineCap: "round",
-						lineJoin: "round",
-						stroke: stroke,
-						strokeWidth,
-					},
-				]);
+					id,
+					type,
+					points: [position.x ?? 0, position.y ?? 0],
+					fill: stroke,
+					lineCap: "round",
+					lineJoin: "round",
+					stroke: stroke,
+					strokeWidth,
+				}));
 				break;
 
 			case ActionType.LINE:
-				setShapes((prev) => [
+				setDraftShape((prev) => ({
 					...prev,
-					{
-						id,
-						type,
-						points: [position.x, position.y, position.x, position.y],
-						stroke: stroke,
-						strokeWidth,
-					},
-				]);
+					id,
+					type,
+					points: [position.x, position.y, position.x, position.y],
+					stroke: stroke,
+					strokeWidth,
+				}));
 				break;
 
 			default:
@@ -146,72 +137,84 @@ const Canvas = ({
 		const now = new Date().getTime();
 		if (now - lastUpdateTime.current < throttleDelay) return;
 		lastUpdateTime.current = now;
+
 		const stage = stageRef.current;
-		const position = stage?.getPointerPosition();
-		const x = position?.x;
-		const y = position?.y;
+		if (!stage) return;
 
-		const updatedShapes = shapes.map((shape) => {
-			if (shape.id !== currentShapeId.current) return shape;
-
-			switch (shape.type) {
+		const position = stage.getPointerPosition();
+		if (position?.x && position?.y && initialPosition.current) {
+			switch (draftShape?.type) {
 				case ActionType.RECTANGLE:
-					return {
-						...shape,
-						width: (x ?? 0) - initialPosition.current!.x,
-						height: (y ?? 0) - initialPosition.current!.y,
-					};
+					setDraftShape((prev) => ({
+						...prev!,
+						width: (position?.x ?? 0) - initialPosition.current!.x,
+						height: (position?.y ?? 0) - initialPosition.current!.y,
+					}));
+					break;
 
 				case ActionType.CIRCLE:
-					return {
-						...shape,
+					setDraftShape((prev) => ({
+						...prev!,
 						radius: Math.sqrt(
-							Math.pow((x ?? 0) - (shape.x ?? 0), 2) +
-								Math.pow((y ?? 0) - (shape.y ?? 0), 2)
+							Math.pow((position?.x ?? 0) - (prev?.x ?? 0), 2) +
+								Math.pow((position?.y ?? 0) - (prev?.y ?? 0), 2)
 						),
-					};
+					}));
+					break;
 
 				case ActionType.ARROW:
-					return {
-						...shape,
-						points: [shape.points[0], shape.points[1], x ?? 0, y ?? 0],
-					};
+					setDraftShape((prev) => ({
+						...prev!,
+						points: [
+							prev?.points[0],
+							prev?.points[1],
+							position?.x ?? 0,
+							position?.y ?? 0,
+						],
+					}));
+					break;
 
 				case ActionType.LINE:
-					return {
-						...shape,
-						points: [shape.points[0], shape.points[1], x ?? 0, y ?? 0],
-					};
+					setDraftShape((prev) => ({
+						...prev!,
+						points: [
+							prev?.points[0],
+							prev?.points[1],
+							position?.x ?? 0,
+							position?.y ?? 0,
+						],
+					}));
+					break;
 
 				case ActionType.FREE:
-					return {
-						...shape,
-						points: [...shape.points, x ?? 0, y ?? 0],
-					};
+					setDraftShape((prev) => ({
+						...prev!,
+						points: [...prev?.points, position?.x ?? 0, position?.x ?? 0],
+					}));
+					break;
 
 				default:
-					return shape;
+					break;
 			}
-		});
-
-		setShapes(updatedShapes);
-	}, [action, shapes]);
+		}
+	}, [action, draftShape]);
 
 	const pointerUpHandler = useCallback(() => {
-		const shape = shapes?.find((shape) => shape.id === currentShapeId.current);
-		if (shape) {
-			addNewShape(shape);
+		if (draftShape) {
+			handleDelta({operation: "create", data: draftShape});
 		}
 
 		isPainting.current = false;
 		currentShapeId.current = null;
 		initialPosition.current = null;
 		removeSelectedShape();
-	}, [shapes]);
+	}, [draftShape]);
 
 	const onclickHandler = (e: KonvaEventObject<MouseEvent>) => {
 		const target = e.currentTarget;
 		const id = target.id();
+
+		const shape = shapes.find((shape) => shape.id === id);
 
 		if (action === ActionType.SELECT) {
 			if (target) {
@@ -220,7 +223,66 @@ const Canvas = ({
 				setCurrentShapeSelected(id);
 			}
 		} else if (action === ActionType.ERASER) {
-			setShapes((prev) => prev.filter((shape) => shape.id !== id));
+			if (shape) handleDelta({operation: "update", data: shape});
+			// setShapes((prev) => prev.filter((shape) => shape.id !== id));
+		}
+	};
+
+	const renderDraft = () => {
+		switch (draftShape?.type) {
+			case ActionType.RECTANGLE:
+				return (
+					<Rect
+						key={draftShape.id}
+						{...draftShape}
+						id={draftShape.id}
+						draggable={isDraggable}
+						onClick={onclickHandler}
+					/>
+				);
+			case ActionType.CIRCLE:
+				return (
+					<Circle
+						key={draftShape.id}
+						{...draftShape}
+						id={draftShape.id}
+						draggable={isDraggable}
+						onClick={onclickHandler}
+					/>
+				);
+			case ActionType.ARROW:
+				return (
+					// @ts-expect-error error
+					<Arrow
+						{...draftShape}
+						key={draftShape.id}
+						id={draftShape.id}
+						draggable={isDraggable}
+						onClick={onclickHandler}
+					/>
+				);
+			case ActionType.LINE:
+				return (
+					<Line
+						key={draftShape.id}
+						{...draftShape}
+						draggable={isDraggable}
+						onClick={(e) => onclickHandler(e)}
+					/>
+				);
+			case ActionType.FREE:
+				return (
+					<Line
+						key={draftShape.id}
+						{...draftShape}
+						id={draftShape.id}
+						draggable={isDraggable}
+						onClick={onclickHandler}
+						tension={0.5}
+					/>
+				);
+			default:
+				return null;
 		}
 	};
 
@@ -303,6 +365,8 @@ const Canvas = ({
 							return null;
 					}
 				})}
+
+				{renderDraft()}
 
 				<Transformer ref={tranformerRef} keepRatio={true} />
 			</Layer>

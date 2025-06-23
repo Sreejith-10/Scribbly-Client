@@ -44,3 +44,10 @@ export interface IBoardState {
 	deltas: Deltas[];
 	currentState: CurrentState;
 }
+
+export type Operation = "create" | "update" | "delete";
+
+export interface DeltaProp {
+	data: Shape;
+	operation: Operation;
+}
