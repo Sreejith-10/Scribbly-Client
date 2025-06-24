@@ -27,10 +27,6 @@ export const useToolbarStore = create<IToolbarStore>((set) => ({
 	setBorderRadius: (borderR) => {
 		set({borderRadius: borderR});
 	},
-	zoom: 100,
-	setZoom: (zoom) => {
-		set({zoom});
-	},
 	isShapeSelected: false,
 	setIsShapeSelected: (selected) => {
 		set({isShapeSelected: selected});

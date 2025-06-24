@@ -1,5 +1,6 @@
 import {cn} from "@/lib";
 import {useBoardStore, useToolbarStore} from "@/stores/canvas";
+import {useCanvasStore} from "@/stores/canvas/useCanvasStore";
 import {ActionType, DeltaProp, Shape} from "@/types";
 import Konva from "konva";
 import {KonvaEventObject} from "konva/lib/Node";
@@ -35,6 +36,7 @@ const Canvas = ({
 	const {action, stroke, fill, setIsShapeSelected, strokeWidth} =
 		useToolbarStore();
 	const {setCurrentShapeSelected, removeSelectedShape} = useBoardStore();
+	const {setZoom} = useCanvasStore();
 
 	const stageRef = useRef<Konva.Stage>(null);
 	const isPainting = useRef<boolean>(false);
@@ -354,6 +356,47 @@ const Canvas = ({
 		[shapes, handleDelta]
 	);
 
+	const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
+		if (action !== "move") return;
+		e.evt.preventDefault();
+
+		const stage = stageRef.current;
+		const oldScale = stage?.scaleX();
+		const pointer = stage?.getPointerPosition();
+
+		if (!pointer || !stage || !oldScale) return;
+
+		const mousePointTo = {
+			x: (pointer.x - stage?.x()) / oldScale,
+			y: (pointer.y - stage?.y()) / oldScale,
+		};
+
+		let direction = e.evt.deltaY > 0 ? 1 : -1;
+
+		if (e.evt.ctrlKey) {
+			direction = -direction;
+		}
+
+		const scaleBy = 1.01;
+		let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+		const MIN_ZOOM = 0.1;
+		const MAX_ZOOM = 100;
+		newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newScale));
+		const scalePercenet = Math.floor(newScale * 100);
+
+		if (scalePercenet >= 200 || scalePercenet < 10) return;
+
+		stage?.scale({x: newScale, y: newScale});
+
+		const newPos = {
+			x: pointer.x - mousePointTo.x * newScale,
+			y: pointer.y - mousePointTo.y * newScale,
+		};
+		stage?.position(newPos);
+		setZoom(scalePercenet);
+	};
+
 	return (
 		<Stage
 			ref={stageRef}
@@ -362,7 +405,9 @@ const Canvas = ({
 			className={cn(className)}
 			onPointerDown={pointerDownHandler}
 			onPointerUp={pointerUpHandler}
-			onPointerMove={pointerMoveHandler}>
+			onPointerMove={pointerMoveHandler}
+			onWheel={handleWheel}
+			draggable={action === "move"}>
 			<Layer>
 				<Rect
 					width={window.innerWidth}
