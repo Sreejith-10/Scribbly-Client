@@ -24,63 +24,9 @@ import {BoardCard} from "@/components/dashboard/board-card";
 import {ThemeToggle} from "@/components/ui/theme-toggle";
 import {BoardCreation} from "@/components/dashboard/board-creation";
 import {useQuery} from "@tanstack/react-query";
-import {getBoardMetadata} from "@/controllers/board";
+import {getBoardMetadata} from "@/controllers/board/board";
 import {IBoardMetadata} from "@/types";
 import Link from "next/link";
-
-const recentBoards = [
-	{
-		id: 1,
-		title: "Project Planning",
-		lastModified: "2 hours ago",
-		collaborators: 3,
-		thumbnail: "/placeholder.svg?height=120&width=200",
-		isStarred: true,
-	},
-	{
-		id: 2,
-		title: "Design System",
-		lastModified: "1 day ago",
-		collaborators: 5,
-		thumbnail: "/placeholder.svg?height=120&width=200",
-		isStarred: false,
-	},
-	{
-		id: 3,
-		title: "User Research",
-		lastModified: "3 days ago",
-		collaborators: 2,
-		thumbnail: "/placeholder.svg?height=120&width=200",
-		isStarred: true,
-	},
-	{
-		id: 4,
-		title: "Sprint Retrospective",
-		lastModified: "1 week ago",
-		collaborators: 8,
-		thumbnail: "/placeholder.svg?height=120&width=200",
-		isStarred: false,
-	},
-];
-
-const sharedBoards = [
-	{
-		id: 5,
-		title: "Marketing Campaign",
-		owner: "Sarah Chen",
-		collaborators: 4,
-		thumbnail: "/placeholder.svg?height=120&width=200",
-		role: "Editor",
-	},
-	{
-		id: 6,
-		title: "Product Roadmap",
-		owner: "Mike Johnson",
-		collaborators: 6,
-		thumbnail: "/placeholder.svg?height=120&width=200",
-		role: "Viewer",
-	},
-];
 
 function CreateBoardDialog({onclick}: {onclick: () => void}) {
 	return (
@@ -103,7 +49,7 @@ export default function Dashboard() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 
-	const {data, isLoading, error} = useQuery({
+	const {data} = useQuery({
 		queryKey: ["board_metadata"],
 		queryFn: getBoardMetadata<{boardMetadatas: IBoardMetadata[]}>,
 	});

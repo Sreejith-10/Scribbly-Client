@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from "react";
 import {motion} from "motion/react";
-import {Compass, Lock, Share2, Sparkles} from "lucide-react";
+import {Compass, Lock, Menu, Share2, Sparkles} from "lucide-react";
 import {
 	NavigationMenu,
 	NavigationMenuContent,
@@ -15,9 +15,35 @@ import {
 import {Button} from "./button";
 import Image from "next/image";
 import Link from "next/link";
+import {ThemeToggle} from "./theme-toggle";
+import {MobileMenu} from "./mobile-menu";
+
+const navItems = [
+	{
+		icon: Sparkles,
+		title: "Real-time Collaboration",
+		description: "Work together in real-time with your team",
+	},
+	{
+		icon: Compass,
+		title: "Infinite Canvas",
+		description: "Unlimited space for your ideas and projects",
+	},
+	{
+		icon: Share2,
+		title: "Easy Sharing",
+		description: "Share your boards with anyone, anywhere",
+	},
+	{
+		icon: Lock,
+		title: "Secure",
+		description: "Enterprise-grade security for your content",
+	},
+];
 
 export const NavBar = () => {
 	const [scrolled, setScrolled] = useState(false);
+	const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
 	useEffect(() => {
 		const handleScroll = () => {
@@ -58,29 +84,7 @@ export const NavBar = () => {
 							</NavigationMenuTrigger>
 							<NavigationMenuContent>
 								<ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-									{[
-										{
-											icon: Sparkles,
-											title: "Real-time Collaboration",
-											description: "Work together in real-time with your team",
-										},
-										{
-											icon: Compass,
-											title: "Infinite Canvas",
-											description:
-												"Unlimited space for your ideas and projects",
-										},
-										{
-											icon: Share2,
-											title: "Easy Sharing",
-											description: "Share your boards with anyone, anywhere",
-										},
-										{
-											icon: Lock,
-											title: "Secure",
-											description: "Enterprise-grade security for your content",
-										},
-									].map((item, i) => (
+									{navItems.map((item, i) => (
 										<li key={i}>
 											<NavigationMenuLink asChild>
 												<a className="flex select-none items-center gap-3 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
@@ -115,7 +119,8 @@ export const NavBar = () => {
 					</NavigationMenuList>
 				</NavigationMenu>
 
-				<div className="flex items-center gap-2">
+				<div className="hidden md:flex items-center gap-2">
+					<ThemeToggle />
 					<Button variant="ghost" className="hidden md:inline-flex">
 						<Link href="/login">Log in</Link>
 					</Button>
@@ -123,6 +128,18 @@ export const NavBar = () => {
 						<Link href="/signup">Sign up free</Link>
 					</Button>
 				</div>
+
+				<Menu onClick={() => setMobileNavOpen(true)} className="md:hidden" />
+
+				<MobileMenu
+					isOpen={mobileNavOpen}
+					navItems={navItems.map((item) => ({
+						name: item.title,
+						description: item.description,
+						href: item.title,
+					}))}
+					onClose={() => setMobileNavOpen(false)}
+				/>
 			</div>
 		</motion.header>
 	);

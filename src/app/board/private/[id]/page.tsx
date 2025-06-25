@@ -16,6 +16,7 @@ const Canvas = dynamic(() => import("@/components/whiteboard/canvas"), {
 
 export default function Page() {
 	const action = useToolbarStore((state) => state.action);
+	const isShapeSelected = useToolbarStore((state) => state.isShapeSelected);
 	const {id} = useParams<{id: string}>();
 	const {
 		currentState,
@@ -49,7 +50,10 @@ export default function Page() {
 		<div className="w-full h-screen relative">
 			<ToolBar />
 			<CanvasMenu onSave={snapShot} />
-			{!["select", "move", "eraser"].includes(action) && <CustomizeBar />}
+			{!["select", "move", "eraser"].includes(action) ||
+			(action === "select" && isShapeSelected) ? (
+				<CustomizeBar />
+			) : null}
 			<Canvas
 				width={window.innerWidth}
 				height={window.innerHeight}

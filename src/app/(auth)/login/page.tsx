@@ -24,7 +24,7 @@ import {useState} from "react";
 import {Eye, EyeClosed} from "lucide-react";
 import {toast} from "sonner";
 import {useMutation} from "@tanstack/react-query";
-import {loginUser} from "@/controllers/auth";
+import {loginUser} from "@/controllers/auth/auth";
 import {useRouter} from "next/navigation";
 
 export default function LoginPage() {

@@ -3,11 +3,11 @@ import {Metadata} from "next";
 import {ReactNode} from "react";
 
 export const metadata: Metadata = {
-	title: "Scribbly user login",
-	description: "User login page",
+	title: "Invitation Page",
+	description: "Scribbly board invitation page",
 };
 
-export default function LoignLayout({
+export default function InvitationLayout({
 	children,
 }: Readonly<{children: ReactNode}>) {
 	return (

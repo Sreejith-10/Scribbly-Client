@@ -1,4 +1,4 @@
-import {BOARD_STATE} from "@/constant";
+import {BOARD_STATE_QUERY_KEY} from "@/constant";
 import {
 	getBoardState,
 	addShape,
@@ -14,7 +14,7 @@ export const useBoardState = (id: string) => {
 	const queryClient = useQueryClient();
 
 	const {data: currentState} = useQuery({
-		queryKey: [BOARD_STATE, id],
+		queryKey: [BOARD_STATE_QUERY_KEY, id],
 		queryFn: () => getBoardState<IBoardState>(id),
 		initialData: {
 			currentState: {},
@@ -29,44 +29,62 @@ export const useBoardState = (id: string) => {
 	const {mutate: addNewShape} = useMutation({
 		mutationFn: (shape: Shape) => addShape(id, shape),
 		onMutate: (shape) => {
-			queryClient.setQueryData([BOARD_STATE, id], (old: IBoardState) => ({
-				...old,
-				currentState: {...old.currentState, [shape.id]: {...shape}},
-			}));
+			queryClient.setQueryData(
+				[BOARD_STATE_QUERY_KEY, id],
+				(old: IBoardState) => ({
+					...old,
+					currentState: {...old.currentState, [shape.id]: {...shape}},
+				})
+			);
 		},
 	});
 
 	const {mutate: editShape} = useMutation({
 		mutationFn: (shape: Shape) => updateShape(id, shape),
 		onMutate: (shape) => {
-			const state = queryClient.getQueryData<IBoardState>([BOARD_STATE, id]);
+			const state = queryClient.getQueryData<IBoardState>([
+				BOARD_STATE_QUERY_KEY,
+				id,
+			]);
 			if (state) state.currentState[shape.id] = {...shape};
-			queryClient.setQueryData([BOARD_STATE, id], (old: IBoardState) => ({
-				...old,
-				currentState: {...old.currentState},
-			}));
+			queryClient.setQueryData(
+				[BOARD_STATE_QUERY_KEY, id],
+				(old: IBoardState) => ({
+					...old,
+					currentState: {...old.currentState},
+				})
+			);
 		},
 	});
 
 	const {mutate: removeShape} = useMutation({
 		mutationFn: (shape: Shape) => deleteShape(id, shape.id),
 		onMutate: (shape) => {
-			const state = queryClient.getQueryData<IBoardState>([BOARD_STATE, id]);
+			const state = queryClient.getQueryData<IBoardState>([
+				BOARD_STATE_QUERY_KEY,
+				id,
+			]);
 			delete state?.currentState[shape.id];
-			queryClient.setQueryData([BOARD_STATE, id], (old: IBoardState) => ({
-				...old,
-				currentState: {...state?.currentState},
-			}));
+			queryClient.setQueryData(
+				[BOARD_STATE_QUERY_KEY, id],
+				(old: IBoardState) => ({
+					...old,
+					currentState: {...state?.currentState},
+				})
+			);
 		},
 	});
 
 	const {mutate: snapShot} = useMutation({
 		mutationFn: () => createSnapShot(id),
 		onMutate: () => {
-			queryClient.setQueryData([BOARD_STATE, id], (old: IBoardState) => ({
-				...old,
-				deltas: [],
-			}));
+			queryClient.setQueryData(
+				[BOARD_STATE_QUERY_KEY, id],
+				(old: IBoardState) => ({
+					...old,
+					deltas: [],
+				})
+			);
 		},
 		onSuccess: () => {
 			toast.success("board saved");
@@ -76,22 +94,28 @@ export const useBoardState = (id: string) => {
 	const {mutate: resizeShape} = useMutation({
 		mutationFn: (shape: Shape) => updateShape(id, shape),
 		onMutate: (shape) => {
-			queryClient.setQueryData([BOARD_STATE, id], (old: IBoardState) => ({
-				...old,
-				currentState: {...old.currentState, [shape.id]: {...shape}},
-				// Delta is needed to be updated here
-			}));
+			queryClient.setQueryData(
+				[BOARD_STATE_QUERY_KEY, id],
+				(old: IBoardState) => ({
+					...old,
+					currentState: {...old.currentState, [shape.id]: {...shape}},
+					// Delta is needed to be updated here
+				})
+			);
 		},
 	});
 
 	const {mutate: moveShape} = useMutation({
 		mutationFn: (shape: Shape) => updateShape(id, shape),
 		onMutate: (shape) => {
-			queryClient.setQueryData([BOARD_STATE, id], (old: IBoardState) => ({
-				...old,
-				currentState: {...old.currentState, [shape.id]: {...shape}},
-				// Delta is needed to be updated here
-			}));
+			queryClient.setQueryData(
+				[BOARD_STATE_QUERY_KEY, id],
+				(old: IBoardState) => ({
+					...old,
+					currentState: {...old.currentState, [shape.id]: {...shape}},
+					// Delta is needed to be updated here
+				})
+			);
 		},
 	});
 

@@ -21,8 +21,8 @@ import {
 import {Textarea} from "../ui/textarea";
 import {LoadingButton} from "../ui/loading-button";
 import {useMutation} from "@tanstack/react-query";
-import {AccessMode, IBorad} from "@/types";
-import {createBoard} from "@/controllers/board";
+import {AccessMode, IBoard} from "@/types";
+import {createBoard} from "@/controllers/board/board";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
 import {useForm} from "react-hook-form";
@@ -61,7 +61,7 @@ export const BoardCreation = ({open, setOpen}: IBoardCreationProps) => {
 			description?: string;
 			accessMode: AccessMode;
 		}) =>
-			createBoard<{board: IBorad; message: string}>(
+			createBoard<{board: IBoard; message: string}>(
 				title,
 				description,
 				accessMode

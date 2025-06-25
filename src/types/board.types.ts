@@ -6,7 +6,7 @@ export interface IShape extends ShapeConfig {
 	id: string;
 }
 
-export interface IBorad {
+export interface IBoard {
 	_id: string;
 	ownerId: string;
 	title: string;
@@ -18,7 +18,7 @@ export interface IBorad {
 	updatedAt: string;
 }
 
-export interface IBoardMetadata extends Omit<IBorad, "shapes"> {
+export interface IBoardMetadata extends Omit<IBoard, "shapes"> {
 	boardId: string;
 	boardThumbnail: string | null;
 }

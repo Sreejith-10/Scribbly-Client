@@ -23,7 +23,7 @@ import {LuLoaderCircle} from "react-icons/lu";
 import {Eye, EyeClosed} from "lucide-react";
 import {useState} from "react";
 import {useMutation} from "@tanstack/react-query";
-import {registerUser} from "@/controllers/auth";
+import {registerUser} from "@/controllers/auth/auth";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
 

@@ -94,6 +94,15 @@ const createSnapShot = async (boardId: string) => {
 	}
 };
 
+const getBoardMetadataByBoardId = async <T>(boardId: string): Promise<T> => {
+	try {
+		const response = await AxiosInstance.get(`/boards/metadata/${boardId}`);
+		return response.data;
+	} catch (error) {
+		handleAxiosError(error);
+	}
+};
+
 export {
 	getBoard,
 	createBoard,
@@ -103,4 +112,5 @@ export {
 	updateShape,
 	deleteShape,
 	createSnapShot,
+	getBoardMetadataByBoardId,
 };
