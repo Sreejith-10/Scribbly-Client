@@ -18,7 +18,7 @@ export default function Page() {
 		<div className="w-full h-screen relative">
 			<ToolBar />
 			<CanvasMenu />
-			{!["select", "move", "eraser"].includes(action) && <CustomizeBar />}
+			{!["select", "free", "eraser"].includes(action) && <CustomizeBar />}
 			<Canvas
 				width={window.innerWidth}
 				height={window.innerHeight}

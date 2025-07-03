@@ -1,6 +1,6 @@
-import {BOARD_METADATAS_QUERY_KEY, USER_STATE_QUERY_KEY} from "@/constant";
-import {getBoardMetadata} from "@/controllers/board";
-import {AccessMode, IBoardMetadata} from "@/types";
+import {BOARD_METADATA_QUERY_KEY, USER_STATE_QUERY_KEY} from "@/constant";
+import {getBoardMetadataByBoardId} from "@/controllers/board";
+import {AccessMode} from "@/types";
 import {IUser} from "@/types/user.type";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 
@@ -22,12 +22,12 @@ export interface BoardMetadata {
 	owner: IUser;
 }
 
-export const useBoardMetadata = (query: string = "all") => {
+export const useBoardMetadataById = (id: string) => {
 	const queryClient = useQueryClient();
 
-	return useQuery({
-		queryKey: [BOARD_METADATAS_QUERY_KEY, query],
-		queryFn: () => getBoardMetadata<{boardMetadatas: IBoardMetadata[]}>(query),
+	return useQuery<MainBoardMetadata>({
+		queryKey: [BOARD_METADATA_QUERY_KEY, id],
+		queryFn: () => getBoardMetadataByBoardId(id!),
 		enabled: !!queryClient.getQueryData([USER_STATE_QUERY_KEY]),
 	});
 };

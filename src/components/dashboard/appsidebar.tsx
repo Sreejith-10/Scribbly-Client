@@ -66,6 +66,12 @@ export function AppSidebar() {
 									<span>Shared with me</span>
 								</SidebarMenuButton>
 							</SidebarMenuItem>
+							<SidebarMenuItem>
+								<SidebarMenuButton>
+									<Users className="size-4" />
+									<span>Manage boards</span>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
 						</SidebarMenu>
 					</SidebarGroupContent>
 				</SidebarGroup>

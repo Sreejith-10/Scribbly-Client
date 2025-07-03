@@ -33,8 +33,6 @@ export function MobileMenu({isOpen, navItems, onClose}: MobileMenuProps) {
 
 	if (!mounted) return null;
 
-	console.log(navItems);
-
 	return (
 		<AnimatePresence>
 			{isOpen && (

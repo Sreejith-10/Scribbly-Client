@@ -48,7 +48,7 @@ const Canvas = ({
 	const isDraggable = action === ActionType.SELECT;
 
 	const pointerDownHandler = useCallback(() => {
-		if (["move", "select", "eraser"].includes(action)) return;
+		if (["free", "select", "eraser"].includes(action)) return;
 
 		const stage = stageRef.current;
 		if (!stage) return;
@@ -103,7 +103,7 @@ const Canvas = ({
 				}));
 				break;
 
-			case ActionType.FREE:
+			case ActionType.PENCIL:
 				setDraftShape((prev) => ({
 					...prev,
 					id,
@@ -134,7 +134,7 @@ const Canvas = ({
 	}, [action, fill, stroke, strokeWidth]);
 
 	const pointerMoveHandler = useCallback(() => {
-		if (["move", "select", "eraser"].includes(action)) return;
+		if (["free", "select", "eraser"].includes(action)) return;
 
 		const now = new Date().getTime();
 		if (now - lastUpdateTime.current < throttleDelay) return;
@@ -178,7 +178,7 @@ const Canvas = ({
 					}));
 					break;
 
-				case ActionType.FREE:
+				case ActionType.PENCIL:
 					console.log(draftShape.points);
 
 					setDraftShape((prev) => ({
@@ -208,16 +208,15 @@ const Canvas = ({
 		e.cancelBubble = true;
 		const target = e.currentTarget;
 		const id = target.id();
+		const shape = shapes.find((shape) => shape.id === id);
 
 		if (action === ActionType.SELECT) {
 			if (target) {
 				tranformerRef.current?.nodes([target]);
 				setIsShapeSelected(true);
-				setCurrentShapeSelected(id);
+				setCurrentShapeSelected(shape!);
 			}
 		} else if (action === ActionType.ERASER) {
-			const shape = shapes.find((shape) => shape.id === id);
-
 			if (shape) handleDelta({operation: "update", data: shape});
 		}
 	};
@@ -264,7 +263,7 @@ const Canvas = ({
 						onClick={(e) => onclickHandler(e)}
 					/>
 				);
-			case ActionType.FREE:
+			case ActionType.PENCIL:
 				return (
 					<Line
 						key={draftShape.id}
@@ -289,7 +288,7 @@ const Canvas = ({
 			const shape = shapes.find((shape) => shape.id === id);
 
 			handleDelta({
-				operation: "move",
+				operation: "free",
 				data: {
 					...shape!,
 					x: position.x,
@@ -331,7 +330,7 @@ const Canvas = ({
 					break;
 				case ActionType.ARROW:
 				case ActionType.LINE:
-				case ActionType.FREE:
+				case ActionType.PENCIL:
 					updateData = {
 						...shape,
 						x: position.x,
@@ -357,7 +356,7 @@ const Canvas = ({
 	);
 
 	const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
-		if (action !== "move") return;
+		if (action !== "free") return;
 		e.evt.preventDefault();
 
 		const stage = stageRef.current;
@@ -407,7 +406,7 @@ const Canvas = ({
 			onPointerUp={pointerUpHandler}
 			onPointerMove={pointerMoveHandler}
 			onWheel={handleWheel}
-			draggable={action === "move"}>
+			draggable={action === "free"}>
 			<Layer>
 				<Rect
 					width={window.innerWidth}
@@ -474,7 +473,7 @@ const Canvas = ({
 									onTransformEnd={onTransformEndHandler}
 								/>
 							);
-						case ActionType.FREE:
+						case ActionType.PENCIL:
 							return (
 								<Line
 									key={shape.id}

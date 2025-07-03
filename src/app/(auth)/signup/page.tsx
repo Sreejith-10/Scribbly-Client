@@ -22,10 +22,9 @@ import Link from "next/link";
 import {LuLoaderCircle} from "react-icons/lu";
 import {Eye, EyeClosed} from "lucide-react";
 import {useState} from "react";
-import {useMutation} from "@tanstack/react-query";
-import {registerUser} from "@/controllers/auth/auth";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
+import {useAuthMutations} from "@/hooks/mutation/useAuthMutations";
 
 export default function SignupPage() {
 	const [showPass, setShowPass] = useState(false);
@@ -40,20 +39,18 @@ export default function SignupPage() {
 
 	const router = useRouter();
 
-	const {mutate, isPending} = useMutation({
-		mutationFn: (values: z.infer<typeof signupSchema>) =>
-			registerUser<{message: string}>(values),
-		onSuccess: (data) => {
-			toast.success(data.message);
-			router.push("/login");
-		},
-		onError: (error) => {
-			toast.error(error.message);
-		},
-	});
+	const {reigsterMutation} = useAuthMutations();
 
 	const submitHandler = async (values: z.infer<typeof signupSchema>) =>
-		mutate(values);
+		reigsterMutation.mutate(values, {
+			onSuccess: (data) => {
+				toast.success(data.message);
+				router.push("/login");
+			},
+			onError: (error) => {
+				toast.error(error.message);
+			},
+		});
 
 	return (
 		<div className="w-auto h-fit bg-white px-10 py-16 rounded-md border border-slate-200 border-opacity-50 shadow-lg shadow-slate-200 space-y-4">
@@ -187,8 +184,13 @@ export default function SignupPage() {
 							className="hover:underline inline-block float-right">
 							Already have an account
 						</Link>
-						<Button type="submit" className="w-full" disabled={isPending}>
-							{isPending && <LuLoaderCircle className="animate-spin" />}
+						<Button
+							type="submit"
+							className="w-full"
+							disabled={reigsterMutation.isPending}>
+							{reigsterMutation.isPending && (
+								<LuLoaderCircle className="animate-spin" />
+							)}
 							Signup
 						</Button>
 					</form>

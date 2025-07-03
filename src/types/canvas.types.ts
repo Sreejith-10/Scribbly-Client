@@ -1,7 +1,6 @@
 import Konva from "konva";
 
 export enum ActionType {
-	MOVE = "move",
 	FREE = "free",
 	SELECT = "select",
 	RECTANGLE = "rectangle",

@@ -1,6 +1,7 @@
 import {ShapeConfig} from "konva/lib/Shape";
 import {Shape} from "./shapes.types";
 import {AccessMode} from "./common";
+import {IUser} from "./user.type";
 
 export interface IShape extends ShapeConfig {
 	id: string;
@@ -21,6 +22,7 @@ export interface IBoard {
 export interface IBoardMetadata extends Omit<IBoard, "shapes"> {
 	boardId: string;
 	boardThumbnail: string | null;
+	owner: IUser;
 }
 
 export type Snapshot = {
@@ -45,7 +47,7 @@ export interface IBoardState {
 	currentState: CurrentState;
 }
 
-export type Operation = "create" | "update" | "delete" | "move" | "resize";
+export type Operation = "create" | "update" | "delete" | "free" | "resize";
 
 export interface DeltaProp {
 	data: Shape;

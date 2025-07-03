@@ -1,5 +1,4 @@
 import {Shape} from "@/types/shapes.types";
-import {IToolbar} from "@/types/toolbar.types";
 import {create} from "zustand";
 
 export interface IBoardStore {
@@ -7,16 +6,8 @@ export interface IBoardStore {
 	setShapes: (shapes: Shape[]) => void;
 	addShape: (shape: Shape) => void;
 	removeShape: (shapeId: string) => void;
-	currentShapeSelected: string | null;
-	setCurrentShapeSelected: (shapeId: string) => void;
-	updateCurrentShapeSelected: ({
-		stroke,
-		strokeWidth,
-		fill,
-		borderRadius,
-	}: Partial<
-		Pick<IToolbar, "stroke" | "strokeWidth" | "fill" | "borderRadius">
-	>) => void;
+	currentShapeSelected: Shape | null;
+	setCurrentShapeSelected: (shape: Shape) => void;
 	removeSelectedShape: () => void;
 	changeShapeLayer: (shapeId: string, positionToBeMoved: number) => void;
 }
@@ -37,16 +28,9 @@ export const useBoardStore = create<IBoardStore>((set) => ({
 		}));
 	},
 	currentShapeSelected: null,
-	setCurrentShapeSelected: (shapeId) => {
+	setCurrentShapeSelected: (shape) => {
 		set(() => ({
-			currentShapeSelected: shapeId,
-		}));
-	},
-	updateCurrentShapeSelected: (attr) => {
-		set((state) => ({
-			shapes: state.shapes.map((shape) =>
-				shape.id === state.currentShapeSelected ? {...shape, ...attr} : shape
-			),
+			currentShapeSelected: shape,
 		}));
 	},
 	removeSelectedShape: () => {

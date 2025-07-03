@@ -8,7 +8,7 @@ export const UndoRedo = () => {
 	const setZoom = useCanvasStore((state) => state.setZoom);
 
 	return (
-		<div className="w-max h-auto flex gap-3 px-4 py-2 rounded-lg shadow-md absolute bg-secondary cursor-pointer z-9999">
+		<div className="w-max h-auto flex gap-3 px-4 py-2 rounded-lg absolute bg-secondary border cursor-pointer z-9999">
 			<div className="flex gap-2">
 				<Tooltip>
 					<TooltipContent>undo</TooltipContent>

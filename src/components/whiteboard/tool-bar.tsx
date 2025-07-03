@@ -47,7 +47,7 @@ const tools = [
 	},
 	{
 		icon: <LuPencil />,
-		value: ActionType.FREE,
+		value: ActionType.PENCIL,
 	},
 	{
 		icon: <LuTextCursor />,
@@ -67,28 +67,28 @@ export const ToolBar = () => {
 	const {action, setAction, setToolSelected} = useToolbarStore();
 
 	return (
-		<div className="w-fit h-auto p-2 rounded-lg shadow-md bg-white border border-zinc-300 border-opacity-30 fixed top-5 left-1/2 -translate-x-1/2 z-9">
+		<div className="w-fit h-auto p-2 rounded-lg shadow-md bg-secondary border fixed top-5 left-1/2 -translate-x-1/2 z-9">
 			<div className="flex w-full gap-2 cursor-pointer">
 				<div className="relative">
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<div
 								onClick={() => {
-									setAction("move" as ActionType);
-									if (!["select", "eraser", "move"].includes("move")) {
+									setAction("free" as ActionType);
+									if (!["select", "eraser", "free"].includes("free")) {
 										setToolSelected(true);
 									} else {
 										setToolSelected(false);
 									}
 								}}
-								aria-label={"move"}
-								className={`size-8 rounded-md hover:bg-primary/50 flex items-center justify-center ${
-									action === "move" ? "bg-primary" : "bg-white"
+								aria-label={"free"}
+								className={`size-8 rounded-md hover:bg-primary/90 flex items-center justify-center ${
+									action === "free" ? "bg-primary" : "bg-secondary"
 								}`}>
 								<Hand className="size-5" />
 							</div>
 						</TooltipTrigger>
-						<TooltipContent>move</TooltipContent>
+						<TooltipContent>free</TooltipContent>
 					</Tooltip>
 				</div>
 				{tools.map((tool, index) => (
@@ -98,15 +98,15 @@ export const ToolBar = () => {
 								<div
 									onClick={() => {
 										setAction(tool.value as ActionType);
-										if (!["select", "eraser", "move"].includes(tool.value)) {
+										if (!["select", "eraser", "free"].includes(tool.value)) {
 											setToolSelected(true);
 										} else {
 											setToolSelected(false);
 										}
 									}}
 									aria-label={tool.value}
-									className={`size-8 rounded-md hover:bg-primary/50 flex items-center justify-center ${
-										action === tool.value ? "bg-primary" : "bg-white"
+									className={`size-8 rounded-md hover:bg-primary/90 flex items-center justify-center ${
+										action === tool.value ? "bg-primary" : "bg-secondary"
 									}`}>
 									{tool.icon}
 								</div>

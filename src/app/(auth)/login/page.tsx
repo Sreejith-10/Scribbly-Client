@@ -23,9 +23,8 @@ import {loginSchema} from "@/schema/login.schema";
 import {useState} from "react";
 import {Eye, EyeClosed} from "lucide-react";
 import {toast} from "sonner";
-import {useMutation} from "@tanstack/react-query";
-import {loginUser} from "@/controllers/auth/auth";
 import {useRouter} from "next/navigation";
+import {useAuthMutations} from "@/hooks/mutation/useAuthMutations";
 
 export default function LoginPage() {
 	const [showPass, setShowPass] = useState<boolean>(false);
@@ -39,20 +38,19 @@ export default function LoginPage() {
 
 	const router = useRouter();
 
-	const {mutate, isPending} = useMutation({
-		mutationFn: ({email, password}: {email: string; password: string}) =>
-			loginUser<{message: string}>(email, password),
-		onSuccess: (data) => {
-			toast.success(data.message);
-			router.push("/dashboard", {scroll: true});
-		},
-		onError: (error) => {
-			toast.error(error.message);
-		},
-	});
+	const {loginMutation} = useAuthMutations();
 
-	const submitHandler = async (values: z.infer<typeof loginSchema>) =>
-		mutate(values);
+	const submitHandler = async (values: z.infer<typeof loginSchema>) => {
+		loginMutation.mutate(values, {
+			onSuccess: (data) => {
+				toast.success(data.message);
+				router.push("/dashboard/all", {scroll: true});
+			},
+			onError: (error) => {
+				toast.error(error.message);
+			},
+		});
+	};
 
 	return (
 		<div className="w-auto h-fit bg-white px-10 py-16 rounded-md shadow-md shadow-slate-200 space-y-4">
@@ -160,8 +158,13 @@ export default function LoginPage() {
 							className="hover:underline inline-block float-right">
 							Create an account
 						</Link>
-						<Button type="submit" className={`w-full`} disabled={isPending}>
-							{isPending && <LuLoaderCircle className="animate-spin" />}
+						<Button
+							type="submit"
+							className={`w-full`}
+							disabled={loginMutation.isPending}>
+							{loginMutation.isPending && (
+								<LuLoaderCircle className="animate-spin" />
+							)}
 							Login
 						</Button>
 					</form>

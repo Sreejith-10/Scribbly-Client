@@ -22,7 +22,7 @@ import {Textarea} from "../ui/textarea";
 import {LoadingButton} from "../ui/loading-button";
 import {useMutation} from "@tanstack/react-query";
 import {AccessMode, IBoard} from "@/types";
-import {createBoard} from "@/controllers/board/board";
+import {createBoard} from "@/controllers/board";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
 import {useForm} from "react-hook-form";
