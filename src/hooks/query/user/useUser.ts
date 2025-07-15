@@ -1,10 +1,10 @@
-import {USER_STATE_QUERY_KEY} from "@/constant";
 import {fetchUser} from "@/controllers/user";
+import {queryKeys} from "@/lib/query-keys";
 import {useQuery} from "@tanstack/react-query";
 
-export const useUserQuery = () => {
+export const useUser = () => {
 	return useQuery({
-		queryKey: [USER_STATE_QUERY_KEY],
+		queryKey: queryKeys.user.u,
 		queryFn: fetchUser,
 	});
 };

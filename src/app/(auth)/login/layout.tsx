@@ -1,4 +1,3 @@
-import {DotsBackground} from "@/components/ui/dots-bg";
 import {Metadata} from "next";
 import {ReactNode} from "react";
 
@@ -11,9 +10,9 @@ export default function LoignLayout({
 	children,
 }: Readonly<{children: ReactNode}>) {
 	return (
-		<div className="w-full h-screen grid place-content-center relative select-none">
-			<DotsBackground />
+		<div className="grid min-h-svh lg:grid-cols-2">
 			{children}
+			<div className="h-full w-full bg-secondary bg-[radial-gradient(var(--primary),transparent_1px)] [background-size:26px_26px] hidden lg:block" />
 		</div>
 	);
 }

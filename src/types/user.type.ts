@@ -3,6 +3,6 @@ export interface IUser {
 	username: string;
 	email: string;
 	avatarUrl: string | null;
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: string;
+	updatedAt: string;
 }

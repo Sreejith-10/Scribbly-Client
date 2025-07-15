@@ -10,21 +10,25 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import {H1, P} from "@/components/ui/typography";
 import {signupSchema} from "@/schema/signup.schema";
 import {useForm} from "react-hook-form";
 import * as z from "zod";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {Button} from "@/components/ui/button";
-import {FaUser, FaLock} from "react-icons/fa";
-import {IoMdMail} from "react-icons/io";
 import Link from "next/link";
 import {LuLoaderCircle} from "react-icons/lu";
-import {Eye, EyeClosed} from "lucide-react";
+import {
+	Eye,
+	EyeClosed,
+	GalleryVerticalEnd,
+	Lock,
+	Mail,
+	User,
+} from "lucide-react";
 import {useState} from "react";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
-import {useAuthMutations} from "@/hooks/mutation/useAuthMutations";
+import {useRegisterUser} from "@/hooks/mutation/auth";
 
 export default function SignupPage() {
 	const [showPass, setShowPass] = useState(false);
@@ -39,7 +43,7 @@ export default function SignupPage() {
 
 	const router = useRouter();
 
-	const {reigsterMutation} = useAuthMutations();
+	const reigsterMutation = useRegisterUser();
 
 	const submitHandler = async (values: z.infer<typeof signupSchema>) =>
 		reigsterMutation.mutate(values, {
@@ -53,148 +57,183 @@ export default function SignupPage() {
 		});
 
 	return (
-		<div className="w-auto h-fit bg-white px-10 py-16 rounded-md border border-slate-200 border-opacity-50 shadow-lg shadow-slate-200 space-y-4">
-			<div>
-				<H1>Create an Account</H1>
-				<P className="text-slate-600">
-					Enter your email below to create your account
-				</P>
+		<div className="flex flex-col gap-4 p-6 md:p-10">
+			<div className="flex justify-center gap-2 md:justify-start">
+				<Link href="/" className="flex items-center gap-2 font-medium">
+					<div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+						<GalleryVerticalEnd className="size-4" />
+					</div>
+					Scribbly
+				</Link>
 			</div>
+			<div className="flex flex-1 items-center justify-center">
+				<div className="w-full max-w-xs">
+					<Form {...form}>
+						<form
+							className="flex flex-col gap-6"
+							onSubmit={form.handleSubmit(submitHandler)}>
+							<div className="flex flex-col items-center gap-2 text-center">
+								<h1 className="text-2xl font-bold">Create new account</h1>
+								<p className="text-muted-foreground text-sm text-balance">
+									Enter your username and email below to create your account
+								</p>
+							</div>
 
-			<div className="flex gap-3">
-				<GoogleAuth />
-				<GithubAuth />
-			</div>
-
-			<div className="w-full h-auto flex items-center justify-center gap-3">
-				<span className="w-full h-[2px] bg-zinc-200" />
-				<span className="p-1 border border-zinc-300 rounded-full text-sm text-slate-500">
-					OR
-				</span>
-				<span className="w-full h-[2px] bg-zinc-200" />
-			</div>
-
-			<div>
-				<Form {...form}>
-					<form
-						className="space-y-6"
-						onSubmit={form.handleSubmit(submitHandler)}>
-						<FormField
-							control={form.control}
-							name="username"
-							render={({field}) => (
-								<FormItem>
-									<div className="relative flex items-center gap-5 h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm">
-										<FaUser
-											className={`${
-												form.formState.errors?.username
-													? "text-destructive"
-													: "text-black"
-											} size-5`}
-										/>
-										<FormControl>
-											<input
-												{...field}
-												className="outline-hidden border-none w-full input-area"
-												placeholder=""
+							<FormField
+								control={form.control}
+								name="username"
+								render={({field}) => (
+									<FormItem>
+										<div className="relative flex items-center gap-3 h-10 w-full rounded-md border border-input bg-primary-foreground dark:bg-input/30 px-3 py-1 text-base shadow-xs transition-colors has-[:focus-visible]border-ring has-[:focus-visible]:ring-ring/50 has-[:focus-visible]:ring-[3px]">
+											<User
+												className={`${
+													form.formState.errors?.username
+														? "text-destructive"
+														: "text-foreground"
+												} size-6`}
 											/>
-										</FormControl>
-										<FormLabel className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none label-text transition-all">
-											Username
-										</FormLabel>
-									</div>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="email"
-							render={({field}) => (
-								<FormItem>
-									<div className="relative flex items-center gap-3 h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm">
-										<IoMdMail
-											className={`${
-												form.formState.errors?.email
-													? "text-destructive"
-													: "text-black"
-											} size-6`}
-										/>
-										<FormControl>
-											<input
-												{...field}
-												className="outline-hidden border-none w-full input-area"
-												placeholder=""
-											/>
-										</FormControl>
-										<FormLabel className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none label-text transition-all">
-											Email
-										</FormLabel>
-									</div>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="password"
-							render={({field}) => (
-								<FormItem>
-									<div className="relative flex items-center gap-3 h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm">
-										<FaLock
-											className={`${
-												form.formState.errors?.password
-													? "text-destructive"
-													: "text-black"
-											} size-5`}
-										/>
-										<FormControl>
-											<input
-												{...field}
-												className="outline-hidden border-none w-full input-area"
-												type={showPass ? "text" : "password"}
-												placeholder=""
-											/>
-										</FormControl>
-										<FormLabel className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none label-text transition-all">
-											Password
-										</FormLabel>
-										{field.value &&
-											(showPass ? (
-												<Eye
-													onClick={() => setShowPass(false)}
-													className="cursor-pointer"
+											<FormControl>
+												<input
+													{...field}
+													className={`${
+														form.formState.errors?.username
+															? "text-destructive"
+															: "text-foreground"
+													} outline-hidden border-none w-full input-area`}
+													placeholder=""
 												/>
-											) : (
-												<EyeClosed
-													onClick={() => setShowPass(true)}
-													className="cursor-pointer"
-												/>
-											))}
-									</div>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+											</FormControl>
+											<FormLabel className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none label-text transition-all ease-in delay-100 duration-100">
+												Username
+											</FormLabel>
+										</div>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-						<Link
-							href="/login"
-							className="hover:underline inline-block float-right">
-							Already have an account
-						</Link>
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={reigsterMutation.isPending}>
-							{reigsterMutation.isPending && (
-								<LuLoaderCircle className="animate-spin" />
-							)}
-							Signup
-						</Button>
-					</form>
-				</Form>
+							<FormField
+								control={form.control}
+								name="email"
+								render={({field}) => (
+									<FormItem>
+										<div className="relative flex items-center gap-3 h-10 w-full rounded-md border border-input bg-primary-foreground dark:bg-input/30 px-3 py-1 text-base shadow-xs transition-colors has-[:focus-visible]border-ring has-[:focus-visible]:ring-ring/50 has-[:focus-visible]:ring-[3px]">
+											<Mail
+												className={`${
+													form.formState.errors?.email
+														? "text-destructive"
+														: "text-foreground"
+												} size-6`}
+											/>
+											<FormControl>
+												<input
+													{...field}
+													className={`${
+														form.formState.errors?.email
+															? "text-destructive"
+															: "text-foreground"
+													} outline-hidden border-none w-full input-area`}
+													placeholder=""
+												/>
+											</FormControl>
+											<FormLabel className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none label-text transition-all ease-in delay-100 duration-100">
+												Email
+											</FormLabel>
+										</div>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={form.control}
+								name="password"
+								render={({field}) => (
+									<FormItem>
+										<div className="relative flex items-center gap-3 h-10 w-full rounded-md border border-input bg-primary-foreground dark:bg-input/30 px-3 py-1 text-base shadow-xs transition-colors has-[:focus-visible]border-ring has-[:focus-visible]:ring-ring/50 has-[:focus-visible]:ring-[3px]">
+											<Lock
+												className={`${
+													form.formState.errors?.password
+														? "text-destructive"
+														: "text-foreground"
+												} size-6`}
+											/>
+											<FormControl>
+												<input
+													{...field}
+													className={`${
+														form.formState.errors?.password
+															? "text-destructive"
+															: "text-foreground"
+													} outline-hidden border-none w-full input-area`}
+													type={showPass ? "text" : "password"}
+													placeholder=""
+												/>
+											</FormControl>
+											<FormLabel className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none label-text transition-all ease-in delay-100 duration-100">
+												Password
+											</FormLabel>
+											{field.value &&
+												(showPass ? (
+													<Eye
+														onClick={() => setShowPass(false)}
+														className="cursor-pointer"
+													/>
+												) : (
+													<EyeClosed
+														onClick={() => setShowPass(true)}
+														className="cursor-pointer"
+													/>
+												))}
+										</div>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<Button
+								type="submit"
+								className={`w-full`}
+								disabled={reigsterMutation.isPending}>
+								{reigsterMutation.isPending && (
+									<LuLoaderCircle className="animate-spin" />
+								)}
+								Signup
+							</Button>
+
+							<div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+								<span className="bg-background text-muted-foreground relative z-10 px-2">
+									Or continue with
+								</span>
+							</div>
+
+							<div>
+								<GoogleAuth
+									title="Signup with google"
+									className="flex gap-4 text-sm items-center cursor-pointer"
+								/>
+							</div>
+							<div>
+								<GithubAuth
+									title="Signup with github"
+									className="flex gap-4 text-sm items-center cursor-pointer"
+								/>
+							</div>
+
+							<div className="text-center text-sm">
+								Already have an account?{" "}
+								<Link
+									href="/login"
+									className="hover:underline hover:text-primary">
+									Login
+								</Link>
+							</div>
+						</form>
+					</Form>
+				</div>
+			</div>
+			<div>
+				<p className="text-xs text-center">Terms and Conditions apply</p>
 			</div>
 		</div>
 	);

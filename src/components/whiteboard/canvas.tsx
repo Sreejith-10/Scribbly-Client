@@ -1,10 +1,9 @@
 import {cn} from "@/lib";
 import {useBoardStore, useToolbarStore} from "@/stores/canvas";
-import {useCanvasStore} from "@/stores/canvas/useCanvasStore";
-import {ActionType, DeltaProp, Shape} from "@/types";
+import {ActionType, Shape} from "@/types";
 import Konva from "konva";
 import {KonvaEventObject} from "konva/lib/Node";
-import {useCallback, useRef, useState} from "react";
+import {Dispatch, SetStateAction, useCallback, useRef, useState} from "react";
 import {
 	Stage,
 	Layer,
@@ -21,7 +20,8 @@ interface CanvasProps {
 	height?: number;
 	className?: string;
 	shapes: Shape[];
-	handleDelta: (delta: DeltaProp) => void;
+	setShapes: Dispatch<SetStateAction<Shape[]>>;
+	addNewShape: (shape: Shape) => void;
 }
 
 const Canvas = ({
@@ -29,14 +29,14 @@ const Canvas = ({
 	height,
 	className,
 	shapes,
-	handleDelta,
+	setShapes,
+	addNewShape,
 }: Readonly<CanvasProps>) => {
 	const [draftShape, setDraftShape] = useState<Shape | null>(null);
 
 	const {action, stroke, fill, setIsShapeSelected, strokeWidth} =
 		useToolbarStore();
 	const {setCurrentShapeSelected, removeSelectedShape} = useBoardStore();
-	const {setZoom} = useCanvasStore();
 
 	const stageRef = useRef<Konva.Stage>(null);
 	const isPainting = useRef<boolean>(false);
@@ -47,8 +47,10 @@ const Canvas = ({
 	const throttleDelay = 50;
 	const isDraggable = action === ActionType.SELECT;
 
+	console.log(shapes);
+
 	const pointerDownHandler = useCallback(() => {
-		if (["free", "select", "eraser"].includes(action)) return;
+		if (["move", "select", "eraser"].includes(action)) return;
 
 		const stage = stageRef.current;
 		if (!stage) return;
@@ -68,8 +70,8 @@ const Canvas = ({
 					...prev!,
 					id,
 					type,
-					x: position.x,
-					y: position.y,
+					x: position?.x,
+					y: position?.y,
 					width: 0,
 					height: 0,
 					stroke: stroke,
@@ -83,8 +85,8 @@ const Canvas = ({
 					...prev,
 					id,
 					type,
-					x: position.x,
-					y: position.y,
+					x: position?.x,
+					y: position?.y,
 					radius: 0,
 					stroke: stroke,
 					fill,
@@ -103,12 +105,12 @@ const Canvas = ({
 				}));
 				break;
 
-			case ActionType.PENCIL:
+			case ActionType.FREE:
 				setDraftShape((prev) => ({
 					...prev,
 					id,
 					type,
-					points: [position.x, position.y],
+					points: [position.x ?? 0, position.y ?? 0],
 					fill: stroke,
 					lineCap: "round",
 					lineJoin: "round",
@@ -134,7 +136,7 @@ const Canvas = ({
 	}, [action, fill, stroke, strokeWidth]);
 
 	const pointerMoveHandler = useCallback(() => {
-		if (["free", "select", "eraser"].includes(action)) return;
+		if (["move", "select", "eraser"].includes(action)) return;
 
 		const now = new Date().getTime();
 		if (now - lastUpdateTime.current < throttleDelay) return;
@@ -149,8 +151,8 @@ const Canvas = ({
 				case ActionType.RECTANGLE:
 					setDraftShape((prev) => ({
 						...prev!,
-						width: position?.x - initialPosition.current!.x,
-						height: position?.y - initialPosition.current!.y,
+						width: (position?.x ?? 0) - initialPosition.current!.x,
+						height: (position?.y ?? 0) - initialPosition.current!.y,
 					}));
 					break;
 
@@ -158,8 +160,8 @@ const Canvas = ({
 					setDraftShape((prev) => ({
 						...prev!,
 						radius: Math.sqrt(
-							Math.pow(position?.x - (prev?.y ?? 0), 2) +
-								Math.pow(position?.y - (prev?.y ?? 0), 2)
+							Math.pow((position?.x ?? 0) - (prev?.x ?? 0), 2) +
+								Math.pow((position?.y ?? 0) - (prev?.y ?? 0), 2)
 						),
 					}));
 					break;
@@ -167,23 +169,31 @@ const Canvas = ({
 				case ActionType.ARROW:
 					setDraftShape((prev) => ({
 						...prev!,
-						points: [prev?.points[0], prev?.points[1], position.x, position?.y],
+						points: [
+							prev?.points[0],
+							prev?.points[1],
+							position?.x ?? 0,
+							position?.y ?? 0,
+						],
 					}));
 					break;
 
 				case ActionType.LINE:
 					setDraftShape((prev) => ({
 						...prev!,
-						points: [prev?.points[0], prev?.points[1], position.x, position.y],
+						points: [
+							prev?.points[0],
+							prev?.points[1],
+							position?.x ?? 0,
+							position?.y ?? 0,
+						],
 					}));
 					break;
 
-				case ActionType.PENCIL:
-					console.log(draftShape.points);
-
+				case ActionType.FREE:
 					setDraftShape((prev) => ({
 						...prev!,
-						points: [...prev?.points, position?.x, position?.y],
+						points: [...prev?.points, position?.x ?? 0, position?.x ?? 0],
 					}));
 					break;
 
@@ -195,29 +205,28 @@ const Canvas = ({
 
 	const pointerUpHandler = useCallback(() => {
 		if (draftShape) {
-			handleDelta({operation: "create", data: draftShape});
+			addNewShape(draftShape);
 		}
 
 		isPainting.current = false;
 		currentShapeId.current = null;
 		initialPosition.current = null;
 		removeSelectedShape();
+		// setDraftShape(null);
 	}, [draftShape]);
 
 	const onclickHandler = (e: KonvaEventObject<MouseEvent>) => {
-		e.cancelBubble = true;
 		const target = e.currentTarget;
 		const id = target.id();
-		const shape = shapes.find((shape) => shape.id === id);
 
 		if (action === ActionType.SELECT) {
 			if (target) {
 				tranformerRef.current?.nodes([target]);
 				setIsShapeSelected(true);
-				setCurrentShapeSelected(shape!);
+				setCurrentShapeSelected(id);
 			}
 		} else if (action === ActionType.ERASER) {
-			if (shape) handleDelta({operation: "update", data: shape});
+			setShapes((prev) => prev.filter((shape) => shape.id !== id));
 		}
 	};
 
@@ -233,167 +242,9 @@ const Canvas = ({
 						onClick={onclickHandler}
 					/>
 				);
-			case ActionType.CIRCLE:
-				return (
-					<Circle
-						key={draftShape.id}
-						{...draftShape}
-						id={draftShape.id}
-						draggable={isDraggable}
-						onClick={onclickHandler}
-					/>
-				);
-			case ActionType.ARROW:
-				return (
-					// @ts-expect-error error
-					<Arrow
-						{...draftShape}
-						key={draftShape.id}
-						id={draftShape.id}
-						draggable={isDraggable}
-						onClick={onclickHandler}
-					/>
-				);
-			case ActionType.LINE:
-				return (
-					<Line
-						key={draftShape.id}
-						{...draftShape}
-						draggable={isDraggable}
-						onClick={(e) => onclickHandler(e)}
-					/>
-				);
-			case ActionType.PENCIL:
-				return (
-					<Line
-						key={draftShape.id}
-						{...draftShape}
-						id={draftShape.id}
-						draggable={isDraggable}
-						onClick={onclickHandler}
-						tension={0.5}
-					/>
-				);
 			default:
 				return null;
 		}
-	};
-
-	const onDragEndHandler = useCallback(
-		(e: KonvaEventObject<DragEvent>) => {
-			const node = e.target;
-			const id = node.id();
-			const position = node.getPosition();
-
-			const shape = shapes.find((shape) => shape.id === id);
-
-			handleDelta({
-				operation: "free",
-				data: {
-					...shape!,
-					x: position.x,
-					y: position.y,
-				},
-			});
-		},
-		[handleDelta, shapes]
-	);
-
-	const onTransformEndHandler = useCallback(
-		(e: KonvaEventObject<Event>) => {
-			const node = e.target;
-			const id = node.id();
-			const position = node.getPosition();
-			const shape = shapes.find((shape) => shape.id === id);
-
-			if (!shape) return;
-
-			let updateData: Shape | {id: string} = {id: shape.id};
-
-			switch (shape.type) {
-				case ActionType.RECTANGLE:
-					updateData = {
-						...shape,
-						x: position.x,
-						y: position.y,
-						width: node.width() * node.scaleX(),
-						height: node.height() * node.scaleY(),
-					};
-					break;
-				case ActionType.CIRCLE:
-					updateData = {
-						...shape,
-						x: position.x,
-						y: position.y,
-						radius: Math.max(5, (shape.radius || 0) * node.scaleX()),
-					};
-					break;
-				case ActionType.ARROW:
-				case ActionType.LINE:
-				case ActionType.PENCIL:
-					updateData = {
-						...shape,
-						x: position.x,
-						y: position.y,
-						scaleX: node.scaleX(),
-						scaleY: node.scaleY(),
-					};
-					break;
-				default:
-					break;
-			}
-
-			handleDelta({
-				operation: "resize",
-				data: updateData as Shape,
-			});
-
-			// Resetting scale to avoid compounding
-			node.scaleX(1);
-			node.scaleY(1);
-		},
-		[shapes, handleDelta]
-	);
-
-	const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
-		if (action !== "free") return;
-		e.evt.preventDefault();
-
-		const stage = stageRef.current;
-		const oldScale = stage?.scaleX();
-		const pointer = stage?.getPointerPosition();
-
-		if (!pointer || !stage || !oldScale) return;
-
-		const mousePointTo = {
-			x: (pointer.x - stage?.x()) / oldScale,
-			y: (pointer.y - stage?.y()) / oldScale,
-		};
-
-		let direction = e.evt.deltaY > 0 ? 1 : -1;
-
-		if (e.evt.ctrlKey) {
-			direction = -direction;
-		}
-
-		const scaleBy = 1.01;
-		let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-
-		const MIN_ZOOM = 0.1;
-		const MAX_ZOOM = 100;
-		newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newScale));
-		const scalePercenet = Math.floor(newScale * 100);
-
-		if (scalePercenet >= 200 || scalePercenet < 10) return;
-
-		stage?.scale({x: newScale, y: newScale});
-
-		const newPos = {
-			x: pointer.x - mousePointTo.x * newScale,
-			y: pointer.y - mousePointTo.y * newScale,
-		};
-		stage?.position(newPos);
-		setZoom(scalePercenet);
 	};
 
 	return (
@@ -404,9 +255,7 @@ const Canvas = ({
 			className={cn(className)}
 			onPointerDown={pointerDownHandler}
 			onPointerUp={pointerUpHandler}
-			onPointerMove={pointerMoveHandler}
-			onWheel={handleWheel}
-			draggable={action === "free"}>
+			onPointerMove={pointerMoveHandler}>
 			<Layer>
 				<Rect
 					width={window.innerWidth}
@@ -430,11 +279,6 @@ const Canvas = ({
 									id={shape.id}
 									draggable={isDraggable}
 									onClick={onclickHandler}
-									onDragStart={() => {
-										console.log("drag");
-									}}
-									onDragEnd={onDragEndHandler}
-									onTransformEnd={onTransformEndHandler}
 								/>
 							);
 						case ActionType.CIRCLE:
@@ -445,8 +289,6 @@ const Canvas = ({
 									id={shape.id}
 									draggable={isDraggable}
 									onClick={onclickHandler}
-									onDragEnd={onDragEndHandler}
-									onTransformEnd={onTransformEndHandler}
 								/>
 							);
 						case ActionType.ARROW:
@@ -458,8 +300,6 @@ const Canvas = ({
 									id={shape.id}
 									draggable={isDraggable}
 									onClick={onclickHandler}
-									onDragEnd={onDragEndHandler}
-									onTransformEnd={onTransformEndHandler}
 								/>
 							);
 						case ActionType.LINE:
@@ -469,11 +309,9 @@ const Canvas = ({
 									{...shape}
 									draggable={isDraggable}
 									onClick={(e) => onclickHandler(e)}
-									onDragEnd={onDragEndHandler}
-									onTransformEnd={onTransformEndHandler}
 								/>
 							);
-						case ActionType.PENCIL:
+						case ActionType.FREE:
 							return (
 								<Line
 									key={shape.id}
@@ -482,8 +320,6 @@ const Canvas = ({
 									draggable={isDraggable}
 									onClick={onclickHandler}
 									tension={0.5}
-									onDragEnd={onDragEndHandler}
-									onTransformEnd={onTransformEndHandler}
 								/>
 							);
 						default:
@@ -493,16 +329,7 @@ const Canvas = ({
 
 				{renderDraft()}
 
-				<Transformer
-					ref={tranformerRef}
-					keepRatio={false}
-					boundBoxFunc={(oldBox, newBox) => {
-						if (newBox.width < 5 || newBox.height < 5) {
-							return oldBox;
-						}
-						return newBox;
-					}}
-				/>
+				<Transformer ref={tranformerRef} keepRatio={true} />
 			</Layer>
 		</Stage>
 	);

@@ -24,4 +24,13 @@ const registerUser = async <T>(
 	}
 };
 
-export {loginUser, registerUser};
+const logoutUser = async () => {
+	try {
+		const response = await AxiosInstance.patch("/auth/logout");
+		return response.data;
+	} catch (error) {
+		handleAxiosError(error);
+	}
+};
+
+export {loginUser, registerUser,logoutUser};

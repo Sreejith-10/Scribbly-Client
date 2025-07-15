@@ -1,4 +1,4 @@
-import {ActionType, StrokeWidth} from "@/types/canvas.types";
+import {ActionType, StrokeWidth} from "@/types/canvas.type";
 
 export interface IToolbar {
 	action: ActionType;

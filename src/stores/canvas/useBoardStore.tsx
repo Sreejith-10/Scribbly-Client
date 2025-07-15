@@ -1,4 +1,4 @@
-import {Shape} from "@/types/shapes.types";
+import {Shape} from "@/types/shapes.type";
 import {create} from "zustand";
 
 export interface IBoardStore {

@@ -1,7 +1,15 @@
 "use client";
 
 import {useState} from "react";
-import {Plus, ArrowUpDown, LinkIcon, Pencil, Trash, Loader} from "lucide-react";
+import {
+	Plus,
+	ArrowUpDown,
+	LinkIcon,
+	Pencil,
+	Trash,
+	Loader,
+	HandHelping,
+} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card, CardContent} from "@/components/ui/card";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
@@ -18,9 +26,11 @@ import {DataTable} from "@/components/ui/data-table";
 import {ColumnDef} from "@tanstack/react-table";
 import {MoreHorizontal} from "lucide-react";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
-import {usePathname} from "next/navigation";
-import {useBoardMetadata} from "@/hooks/query";
-import {useUserQuery} from "@/hooks/query/useUserState";
+import {usePathname, useRouter} from "next/navigation";
+import {useBoardMetadatas} from "@/hooks/query/board";
+import {useUser} from "@/hooks/query/user";
+import {toast} from "sonner";
+import Link from "next/link";
 
 export function CreateBoardDialog({onclick}: {onclick: () => void}) {
 	return (
@@ -51,6 +61,12 @@ export const column: ColumnDef<IBoardMetadata>[] = [
 					<ArrowUpDown className="ml-2 h-4 w-4" />
 				</Button>
 			);
+		},
+		cell: ({row}) => {
+			const id = row.original._id;
+			const access = row.original.accessMode;
+			const link = `/board/${access}/${id}`;
+			return <Link href={link}>{row.original.title}</Link>;
 		},
 	},
 	{
@@ -141,7 +157,25 @@ export const column: ColumnDef<IBoardMetadata>[] = [
 						<DropdownMenuLabel className="font-semibold">
 							Actions
 						</DropdownMenuLabel>
-						<DropdownMenuItem className="cursor-pointer">
+						<DropdownMenuItem
+							onClick={(e) => {
+								e.stopPropagation();
+								window.location.replace(
+									`/dashboard/board-status/${row.original.boardId}`
+								);
+							}}>
+							<HandHelping />
+							Manage
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							className="cursor-pointer"
+							onClick={(e) => {
+								e.stopPropagation();
+								const url = process.env.NEXT_PUBLIC_CLIENT_URL;
+								const clipUrl = `${url}/board/link?boardId=${row.original.boardId}&status=${row.original.accessMode}`;
+								navigator.clipboard.writeText(clipUrl);
+								toast.success("Link copies");
+							}}>
 							<LinkIcon />
 							Copy Link
 						</DropdownMenuItem>
@@ -163,11 +197,10 @@ export const column: ColumnDef<IBoardMetadata>[] = [
 export default function Dashboard() {
 	const [openDialog, setOpenDialog] = useState<boolean>(false);
 	const path = usePathname();
+	const router = useRouter();
 
-	const {data, isLoading} = useBoardMetadata();
-	const {data: user} = useUserQuery();
-
-	console.log(data);
+	const {data, isLoading} = useBoardMetadatas();
+	const {data: user} = useUser();
 
 	return (
 		<>
@@ -177,10 +210,12 @@ export default function Dashboard() {
 			/>
 
 			<div className="flex flex-1 flex-col gap-4 p-4">
-				<div className="w-fit hidden md:flex gap-5">
-					<CreateBoardDialog onclick={() => {}} />
-					<CreateBoardDialog onclick={() => {}} />
-					<CreateBoardDialog onclick={() => {}} />
+				<div className="w-max hidden md:grid grid-cols-2 gap-4">
+					<CreateBoardDialog
+						onclick={() => {
+							setOpenDialog(true);
+						}}
+					/>
 				</div>
 				<div className="w-full h-max">
 					{isLoading ? (
@@ -188,7 +223,17 @@ export default function Dashboard() {
 							<Loader className="size-10 animate-spin m-auto" />
 						</span>
 					) : (
-						<DataTable columns={column} data={data?.boardMetadatas ?? []} />
+						<DataTable
+							columns={column}
+							data={data?.boardMetadatas ?? []}
+							// onRowClick={(data) => {
+							// 	if (data.accessMode === "private") {
+							// 		router.push(`/board/private/${data.boardId}`);
+							// 	} else {
+							// 		router.push(`/board/join/${data.boardId}`);
+							// 	}
+							// }}
+						/>
 					)}
 				</div>
 				{/* <Tabs defaultValue="all" className="w-full">

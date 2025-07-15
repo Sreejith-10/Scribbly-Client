@@ -4,7 +4,7 @@ import {ButtonHTMLAttributes} from "react";
 import {cn} from "@/lib";
 
 interface ILoadingButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-	loading: boolean;
+	loading?: boolean;
 }
 
 export const LoadingButton = ({

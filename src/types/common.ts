@@ -1,1 +1,1 @@
-export type AccessMode = "private" | "request_access" | "public";
+export type AccessMode = "private" | "public";

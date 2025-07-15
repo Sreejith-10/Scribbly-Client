@@ -11,37 +11,50 @@ import {
 	DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import {Avatar, AvatarFallback, AvatarImage} from "../ui/avatar";
-import {useUserQuery} from "@/hooks/query/useUserState";
+import {useUser} from "@/hooks/query/user/useUser";
+import {toast} from "sonner";
+import {useRouter} from "next/navigation";
+import {useLogoutUser} from "@/hooks/mutation/auth";
 
 export function Topbar() {
-	const {data} = useUserQuery();
+	const router = useRouter();
+
+	const {data} = useUser();
+	const logoutMutation = useLogoutUser();
 
 	return (
 		<>
-			<header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+			<header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4">
 				<SidebarTrigger className="-ml-1" />
 				<Separator orientation="vertical" className="mr-2 h-4" />
-				<div className="flex flex-1 items-center gap-2">
-					<div>
-						<Link href="/dashboard/all">All</Link>
-					</div>
-					<div>
-						<Link href="/dashboard/recent">recent</Link>
-					</div>
-				</div>
 				<div className="flex items-center gap-2">
 					<ThemeToggle />
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Avatar className="size-8 cursor-pointer">
 								<AvatarImage src="/placeholder-user.jpg" />
-								<AvatarFallback>{data?.username.split(" ")[0]}</AvatarFallback>
+								<AvatarFallback>
+									{data?.username
+										.split(" ")
+										.map((n) => n[0])
+										.join("")}
+								</AvatarFallback>
 							</Avatar>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
 							<DropdownMenuItem>Profile</DropdownMenuItem>
 							<DropdownMenuItem>Settings</DropdownMenuItem>
-							<DropdownMenuItem>Sign out</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => {
+									logoutMutation.mutate(undefined, {
+										onSuccess: () => {
+											toast.success("user logged out");
+											router.push("/");
+										},
+									});
+								}}>
+								Sign out
+							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>

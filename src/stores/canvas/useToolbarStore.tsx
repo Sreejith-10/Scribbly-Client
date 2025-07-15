@@ -1,5 +1,5 @@
-import {ActionType} from "@/types/canvas.types";
-import {IToolbar} from "@/types/toolbar.types";
+import {ActionType} from "@/types/canvas.type";
+import {IToolbar} from "@/types/toolbar.type";
 import {create} from "zustand";
 
 interface IToolbarStore extends IToolbar {

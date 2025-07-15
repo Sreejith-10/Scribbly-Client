@@ -1,4 +1,4 @@
-import {Clock, Grid3X3, Star, Users} from "lucide-react";
+import {Clock, Grid3X3, Star, UserPlus, Users} from "lucide-react";
 import {
 	Sidebar,
 	SidebarContent,
@@ -11,6 +11,7 @@ import {
 	SidebarGroupLabel,
 } from "../ui/sidebar";
 import Image from "next/image";
+import Link from "next/link";
 
 export function AppSidebar() {
 	return (
@@ -45,25 +46,25 @@ export function AppSidebar() {
 							<SidebarMenuItem>
 								<SidebarMenuButton isActive>
 									<Grid3X3 className="size-4" />
-									<span>All Boards</span>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
-							<SidebarMenuItem>
-								<SidebarMenuButton>
-									<Star className="size-4" />
-									<span>Starred</span>
+									<Link href={"/dashboard/all"}>
+										<span>All</span>
+									</Link>
 								</SidebarMenuButton>
 							</SidebarMenuItem>
 							<SidebarMenuItem>
 								<SidebarMenuButton>
 									<Clock className="size-4" />
-									<span>Recent</span>
+									<Link href={"/dashboard/recent"}>
+										<span>Recent</span>
+									</Link>
 								</SidebarMenuButton>
 							</SidebarMenuItem>
 							<SidebarMenuItem>
 								<SidebarMenuButton>
-									<Users className="size-4" />
-									<span>Shared with me</span>
+									<UserPlus className="size-4" />
+									<Link href={"/dashboard/requests"}>
+										<span>Requests</span>
+									</Link>
 								</SidebarMenuButton>
 							</SidebarMenuItem>
 							<SidebarMenuItem>

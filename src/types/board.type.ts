@@ -1,5 +1,5 @@
 import {ShapeConfig} from "konva/lib/Shape";
-import {Shape} from "./shapes.types";
+import {Shape} from "./shapes.type";
 import {AccessMode} from "./common";
 import {IUser} from "./user.type";
 
@@ -36,7 +36,7 @@ export type Deltas = {
 	operation: "create" | "update" | "delete";
 	sequence: number;
 	shapeId: string;
-	timestamp: Date;
+	timestamp: string;
 };
 
 export type CurrentState = Record<PropertyKey, Shape>;

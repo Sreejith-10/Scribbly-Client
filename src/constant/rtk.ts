@@ -1,1 +1,1 @@
-export const RTK_STALE_TIME: number = 18000;
+export const RTK_STALE_TIME: number = 300000;

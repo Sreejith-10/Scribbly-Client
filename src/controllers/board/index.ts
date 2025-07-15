@@ -1,7 +1,8 @@
 import {AxiosInstance, handleAxiosError} from "@/lib";
 import {AccessMode, IBoardState, Shape} from "@/types";
+import {ResponseDataType} from "@/types/api";
 
-const getBoard = async () => {
+const getBoard = async <T>(): Promise<ResponseDataType & {boards: T}> => {
 	try {
 		const response = await AxiosInstance.get("/boards");
 		return response.data;
@@ -14,9 +15,9 @@ const createBoard = async <T>(
 	title: string,
 	description: string = "",
 	accessMode: AccessMode
-): Promise<T> => {
+): Promise<ResponseDataType & {board: T}> => {
 	try {
-		const response = await AxiosInstance.post("/boards/create", {
+		const response = await AxiosInstance.post("/boards", {
 			title,
 			description,
 			accessMode,
@@ -27,9 +28,11 @@ const createBoard = async <T>(
 	}
 };
 
-const getBoardMetadata = async <T>(query: string): Promise<T> => {
+const getBoardMetadata = async <T>(
+	query: string
+): Promise<ResponseDataType & {boardMetadatas: T}> => {
 	try {
-		const response = await AxiosInstance.get(`/boards/metadata?query=${query}`);
+		const response = await AxiosInstance.get(`/board-metadata?query=${query}`);
 		return response.data;
 	} catch (error) {
 		handleAxiosError(error);
@@ -94,9 +97,15 @@ const createSnapShot = async (boardId: string) => {
 	}
 };
 
-const getBoardMetadataByBoardId = async <T>(boardId: string): Promise<T> => {
+const getBoardMetadataByBoardId = async <T>(
+	boardId: string
+): Promise<
+	ResponseDataType & {
+		boardMetadata: T;
+	}
+> => {
 	try {
-		const response = await AxiosInstance.get(`/boards/metadata/${boardId}`);
+		const response = await AxiosInstance.get(`/board-metadata/${boardId}`);
 		return response.data;
 	} catch (error) {
 		handleAxiosError(error);

@@ -19,7 +19,7 @@ import {
 	DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
-import {useBoardMetadata} from "@/hooks/query";
+import {useBoardMetadata} from "@/hooks/query/board";
 import {IBoardMetadata} from "@/types";
 import {ColumnDef} from "@tanstack/react-table";
 import {usePathname} from "next/navigation";

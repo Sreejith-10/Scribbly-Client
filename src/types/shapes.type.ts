@@ -5,7 +5,7 @@ import {
 	ArrowState,
 	ScribbleState,
 	ActionType,
-} from "./canvas.types";
+} from "./canvas.type";
 
 export type Shape = {
 	id: string;
