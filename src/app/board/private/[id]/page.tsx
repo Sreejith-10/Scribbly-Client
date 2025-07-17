@@ -11,9 +11,12 @@ import {DeltaProp} from "@/types";
 import dynamic from "next/dynamic";
 import {useParams} from "next/navigation";
 
-const Canvas = dynamic(() => import("@/components/whiteboard/canvas"), {
-	ssr: false,
-});
+const PrivateCanvas = dynamic(
+	() => import("@/components/whiteboard/private-canvas"),
+	{
+		ssr: false,
+	}
+);
 
 export default function Page() {
 	const action = useToolbarStore((state) => state.action);
@@ -51,7 +54,7 @@ export default function Page() {
 		<div className="w-full h-screen relative">
 			<ToolBar />
 			<CanvasMenu onSave={snapShot.mutate} />
-			<Canvas
+			<PrivateCanvas
 				width={window.innerWidth}
 				height={window.innerHeight}
 				className="w-full h-full z-[-99999]"

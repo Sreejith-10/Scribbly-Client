@@ -1,48 +1,55 @@
 import {useCallback, useEffect, useRef} from "react";
-import {io, Socket} from "socket.io-client";
+import {getSocket} from "../lib/socket";
 
 export const useSocket = () => {
-	const socketRef = useRef<Socket | null>(null);
-
-	const getSocketInstance = useCallback(() => {
-		if (typeof window === "undefined") return null;
-
-		if (!socketRef.current) {
-			socketRef.current = io("http://localhost:3001", {
-				transports: ["websocket"],
-				withCredentials: true,
-				autoConnect: false,
-				reconnectionAttempts: 3,
-				reconnectionDelay: 1000,
-			});
-		}
-
-		socketRef.current.on("connect", () => {
-			console.log(`WebSocket Connected :${socketRef.current?.id}`);
-		});
-
-		socketRef.current.on("disconnect", () => {
-			console.log(`WebSocket Disconnected :${socketRef.current?.id}`);
-		});
-
-		return socketRef.current;
-	}, []);
+	const socket = getSocket();
+	const listenersRef = useRef(new Map<string, (...args: unknown[]) => void>());
 
 	useEffect(() => {
-		const socket = getSocketInstance();
 		if (!socket) return;
 
-		if (!socket.connected) {
-			socket.connect();
-		}
+		const onConnect = () => {
+			console.log(`WebSocket Connected :${socket.id}`);
+		};
+
+		const onDisconnect = () => {
+			console.log(`WebSocket Disconnected :${socket.id}`);
+		};
+
+		socket.on("connect", onConnect);
+		socket.on("disconnect", onDisconnect);
 
 		return () => {
-			if (socket.connected) {
-				socket.disconnect();
-				socketRef.current = null;
-			}
+			listenersRef.current.forEach((handler, event) => {
+				socket.off(event, handler);
+			});
+			socket.off("connect", onConnect);
+			socket.off("disconnect", onDisconnect);
+			// Do not disconnect the singleton socket here
 		};
-	}, [getSocketInstance]);
+	}, [socket]);
 
-	return {socket: socketRef.current};
+	const on = useCallback(
+		(event: string, handler: (...args: unknown[]) => void) => {
+			if (!socket) return;
+			// Remove old listener if it exists
+			if (listenersRef.current.has(event)) {
+				socket.off(event, listenersRef.current.get(event)!);
+			}
+			// Add new listener
+			socket.on(event, handler);
+			listenersRef.current.set(event, handler);
+		},
+		[socket]
+	);
+
+	const emit = useCallback(
+		(event: string, ...args: unknown[]) => {
+			if (!socket) return;
+			socket.emit(event, ...args);
+		},
+		[socket]
+	);
+
+	return {socket, on, emit};
 };

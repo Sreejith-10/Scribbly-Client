@@ -63,7 +63,7 @@ export const column: ColumnDef<IBoardMetadata>[] = [
 			);
 		},
 		cell: ({row}) => {
-			const id = row.original._id;
+			const id = row.original.boardId;
 			const access = row.original.accessMode;
 			const link = `/board/${access}/${id}`;
 			return <Link href={link}>{row.original.title}</Link>;
@@ -201,6 +201,7 @@ export default function Dashboard() {
 
 	const {data, isLoading} = useBoardMetadatas();
 	const {data: user} = useUser();
+	console.log(data?.boardMetadatas);
 
 	return (
 		<>

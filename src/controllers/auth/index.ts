@@ -33,4 +33,6 @@ const logoutUser = async () => {
 	}
 };
 
-export {loginUser, registerUser,logoutUser};
+const fetchTokens = async () => {};
+
+export {loginUser, registerUser, logoutUser};
