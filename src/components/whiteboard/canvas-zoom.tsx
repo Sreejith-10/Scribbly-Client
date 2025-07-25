@@ -1,9 +1,9 @@
-import { Dispatch, SetStateAction } from "react"
-import { Button } from "../ui/button"
+import { Dispatch, SetStateAction } from 'react';
+import { Button } from '../ui/button';
 
 interface CanvasZoomProps {
-  zoom: number,
-  setZoom: Dispatch<SetStateAction<Number>>
+  zoom: number;
+  setZoom: Dispatch<SetStateAction<Number>>;
 }
 
 export const CanvasZoom = ({ zoom, setZoom }: CanvasZoomProps) => {
@@ -13,5 +13,5 @@ export const CanvasZoom = ({ zoom, setZoom }: CanvasZoomProps) => {
       <span>{zoom}%</span>
       <Button>+</Button>
     </div>
-  )
-}
+  );
+};

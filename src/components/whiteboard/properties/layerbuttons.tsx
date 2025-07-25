@@ -1,34 +1,38 @@
-import {Button} from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
-	LuArrowDown,
-	LuArrowDownToLine,
-	LuArrowUp,
-	LuArrowUpToLine,
-} from "react-icons/lu";
+  LuArrowDown,
+  LuArrowDownToLine,
+  LuArrowUp,
+  LuArrowUpToLine,
+} from 'react-icons/lu';
 
 export const LayerButtons = () => {
-	return (
-		<div className="space-x-3 h-full">
-			<Button
-				variant={"outline"}
-				className="inline-grid h-full border border-slate-200 rounded-md hover:border hover:border-slate-200 place-content-center cursor-pointer">
-				<LuArrowDown />
-			</Button>
-			<Button
-				variant={"outline"}
-				className="inline-grid h-full border border-slate-200 rounded-md hover:border hover:border-slate-200 place-content-center cursor-pointer">
-				<LuArrowUp />
-			</Button>
-			<Button
-				variant={"outline"}
-				className="inline-grid h-full border border-slate-200 rounded-md hover:border hover:border-slate-200 place-content-center cursor-pointer">
-				<LuArrowDownToLine />
-			</Button>
-			<Button
-				variant={"outline"}
-				className="inline-grid h-full border border-slate-200 rounded-md hover:border hover:border-slate-200 place-content-center cursor-pointer">
-				<LuArrowUpToLine />
-			</Button>
-		</div>
-	);
+  return (
+    <div className='h-full space-x-3'>
+      <Button
+        variant={'outline'}
+        className='inline-grid h-full cursor-pointer place-content-center rounded-md border border-slate-200 hover:border hover:border-slate-200'
+      >
+        <LuArrowDown />
+      </Button>
+      <Button
+        variant={'outline'}
+        className='inline-grid h-full cursor-pointer place-content-center rounded-md border border-slate-200 hover:border hover:border-slate-200'
+      >
+        <LuArrowUp />
+      </Button>
+      <Button
+        variant={'outline'}
+        className='inline-grid h-full cursor-pointer place-content-center rounded-md border border-slate-200 hover:border hover:border-slate-200'
+      >
+        <LuArrowDownToLine />
+      </Button>
+      <Button
+        variant={'outline'}
+        className='inline-grid h-full cursor-pointer place-content-center rounded-md border border-slate-200 hover:border hover:border-slate-200'
+      >
+        <LuArrowUpToLine />
+      </Button>
+    </div>
+  );
 };

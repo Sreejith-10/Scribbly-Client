@@ -1,1 +1,1 @@
-export type ResponseDataType = {message?: string};
+export type ResponseDataType = { message?: string };

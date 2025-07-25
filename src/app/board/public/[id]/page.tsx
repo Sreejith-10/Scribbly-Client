@@ -1,83 +1,94 @@
-"use client";
+'use client';
 
-import {ToolBar} from "@/components/whiteboard/tool-bar";
-import {CanvasMenu} from "@/components/whiteboard/canvas-menu";
-import {UndoRedo} from "@/components/whiteboard/undo-redo";
-import {useParams} from "next/navigation";
-import {useToolbarStore} from "@/stores/canvas/useToolbarStore";
-import dynamic from "next/dynamic";
-import {useEffect, useState} from "react";
-import {Customize} from "@/components/whiteboard/customize";
-import {Shape} from "@/types";
-import {useSocket} from "@/hooks/useSocket";
+import { ToolBar } from '@/components/whiteboard/tool-bar';
+import { CanvasMenu } from '@/components/whiteboard/canvas-menu';
+import { UndoRedo } from '@/components/whiteboard/undo-redo';
+import { useParams } from 'next/navigation';
+import { useToolbarStore } from '@/stores/canvas/useToolbarStore';
+import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
+import { Customize } from '@/components/whiteboard/customize';
+import { IBoardState, Shape } from '@/types';
+import { useSocket } from '@/hooks/useSocket';
 
 const PublicCanvas = dynamic(
-	() => import("@/components/whiteboard/public-canvas"),
-	{
-		ssr: false,
-	}
+  () => import('@/components/whiteboard/public-canvas'),
+  {
+    ssr: false,
+  },
 );
 
 export default function Page() {
-	const {id}: {id: string} = useParams();
-	const action = useToolbarStore((state) => state.action);
-	const isSelected = useToolbarStore((state) => state.isShapeSelected);
-	const [shapes, setShapes] = useState<Shape[]>([]);
+  const { id }: { id: string } = useParams();
 
-	const {socket, emit, on} = useSocket();
+  const [shapes, setShapes] = useState<Shape[]>([]);
 
-	useEffect(() => {
-		if (!socket) return;
+  const action = useToolbarStore((state) => state.action);
+  const isSelected = useToolbarStore((state) => state.isShapeSelected);
 
-		emit("joinBoard", {boardId: id});
+  const { socket, emit, on } = useSocket();
 
-		const handleBoardState = (data: any) => {
-			console.log(data);
-		};
-		const handleUserJoined = (data: any) => {
-			console.log(data);
-		};
-		const handleUpdatedBoard = (data: any) => {
-			console.log(data);
-		};
+  useEffect(() => {
+    if (!socket) return;
 
-		on("boardState", handleBoardState);
-		on("userJoined", handleUserJoined);
-		on("updatedBoard", handleUpdatedBoard);
+    emit('joinBoard', { boardId: id });
 
-		// Cleanup: remove listeners
-		return () => {
-			socket.off("boardState", handleBoardState);
-			socket.off("userJoined", handleUserJoined);
-			socket.off("updatedBoard", handleUpdatedBoard);
-		};
-	}, [socket, on, emit, id]);
+    const handleBoardState = (data: IBoardState) => {
+      const { currentState } = data;
 
-	const addNewShape = (shape: Shape) => {
-		emit("boardChange", shape);
-	};
+      setShapes((prev) => [...prev, ...Object.values(currentState)]);
+    };
+    const handleUserJoined = (data) => {
+      console.log(data);
+    };
+    const handleUpdatedBoard = (data: IBoardState) => {
+      setShapes(Object.values(data.currentState));
+    };
 
-	return (
-		<div className="w-full h-screen">
-			<ToolBar />
-			<CanvasMenu onSave={() => console.log("save")} />
-			<PublicCanvas
-				shapes={shapes}
-				width={window.innerWidth}
-				height={window.innerHeight}
-				className="w-full h-full z-[-99999]"
-				addNewShape={addNewShape}
-				setShapes={setShapes}
-			/>
-			{!["free", "eraser"].includes(action) ||
-			(action === "select" && isSelected) ? (
-				<div className="absolute bottom-5 left-1/2 -translate-x-1/2">
-					<Customize />
-				</div>
-			) : null}
-			<div className="fixed bottom-14 left-5">
-				<UndoRedo />
-			</div>
-		</div>
-	);
+    on('boardState', handleBoardState);
+    on('userJoined', handleUserJoined);
+    on('boardUpdate', handleUpdatedBoard);
+
+    // Cleanup: remove listeners
+    return () => {
+      setShapes([]);
+      socket.off('boardState', handleBoardState);
+      socket.off('userJoined', handleUserJoined);
+      socket.off('boardUpdate', handleUpdatedBoard);
+    };
+  }, [socket, on, emit, id]);
+
+  const addNewShape = (shape: Shape) => {
+    const delta = {
+      operation: 'create',
+      shapeId: shape.id,
+      data: shape,
+    };
+    setShapes((prev) => [...prev, shape]);
+    emit('boardUpdate', delta);
+  };
+
+  return (
+    <div className='relative h-screen w-full'>
+      <ToolBar />
+      <CanvasMenu onSave={() => console.log('save')} />
+      <PublicCanvas
+        shapes={shapes}
+        width={window.innerWidth}
+        height={window.innerHeight}
+        className='z-[-99999] h-full w-full'
+        addNewShape={addNewShape}
+        setShapes={setShapes}
+      />
+      {!['free', 'eraser'].includes(action) ||
+      (action === 'select' && isSelected) ? (
+        <div className='absolute bottom-5 left-1/2 -translate-x-1/2'>
+          <Customize />
+        </div>
+      ) : null}
+      <div className='fixed bottom-14 left-5'>
+        <UndoRedo />
+      </div>
+    </div>
+  );
 }

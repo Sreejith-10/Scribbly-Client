@@ -1,1 +1,1 @@
-export * from "./useRemoveCollaborator";
+export * from './useRemoveCollaborator';

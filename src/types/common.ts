@@ -1,1 +1,1 @@
-export type AccessMode = "private" | "public";
+export type AccessMode = 'private' | 'public';

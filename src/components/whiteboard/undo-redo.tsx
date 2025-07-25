@@ -1,45 +1,51 @@
-import {useCanvasStore} from "@/stores/canvas/useCanvasStore";
-import {Minus, Plus} from "lucide-react";
-import {BiRedo, BiUndo} from "react-icons/bi";
-import {Tooltip, TooltipContent, TooltipTrigger} from "../ui/tooltip";
+import { useCanvasStore } from '@/stores/canvas/useCanvasStore';
+import { Minus, Plus } from 'lucide-react';
+import { BiRedo, BiUndo } from 'react-icons/bi';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { useShapeActions } from '@/hooks/mutation/shape';
+import { useParams } from 'next/navigation';
 
 export const UndoRedo = () => {
-	const zoom = useCanvasStore((state) => state.zoom);
-	const setZoom = useCanvasStore((state) => state.setZoom);
+  const { id }: { id: string } = useParams();
 
-	return (
-		<div className="w-max h-auto flex gap-3 px-4 py-2 rounded-lg absolute bg-secondary border cursor-pointer z-9999">
-			<div className="flex gap-2">
-				<Tooltip>
-					<TooltipContent>undo</TooltipContent>
-					<TooltipTrigger>
-						<BiUndo className="size-6 cursor-pointer" />
-					</TooltipTrigger>
-				</Tooltip>
-				<Tooltip>
-					<TooltipContent>redo</TooltipContent>
-					<TooltipTrigger>
-						<BiRedo className="size-6 cursor-pointer" />
-					</TooltipTrigger>
-				</Tooltip>
-			</div>
-			<div className="flex gap-2">
-				<Plus
-					className="active:bg-slate-200 active:rounded-full"
-					onClick={() => {
-						if (zoom < 200) setZoom(zoom + 10);
-					}}
-				/>
-				<span className="inline-block font-bold pointer-events-none">
-					{zoom}%
-				</span>
-				<Minus
-					className="active:bg-slate-200 active:rounded-full"
-					onClick={() => {
-						if (zoom > 10) setZoom(zoom - 10);
-					}}
-				/>
-			</div>
-		</div>
-	);
+  const zoom = useCanvasStore((state) => state.zoom);
+  const setZoom = useCanvasStore((state) => state.setZoom);
+
+  const { undo, redo } = useShapeActions(id);
+
+  return (
+    <div className='bg-secondary absolute z-9999 flex h-auto w-max cursor-pointer gap-3 rounded-lg border px-4 py-2'>
+      <div className='flex gap-2'>
+        <Tooltip>
+          <TooltipContent>undo</TooltipContent>
+          <TooltipTrigger onClick={() => undo.mutate(id)}>
+            <BiUndo className='size-6 cursor-pointer' />
+          </TooltipTrigger>
+        </Tooltip>
+        <Tooltip>
+          <TooltipContent>redo</TooltipContent>
+          <TooltipTrigger onClick={() => redo.mutate(id)}>
+            <BiRedo className='size-6 cursor-pointer' />
+          </TooltipTrigger>
+        </Tooltip>
+      </div>
+      <div className='flex gap-2'>
+        <Plus
+          className='active:rounded-full active:bg-slate-200'
+          onClick={() => {
+            if (zoom < 200) setZoom(zoom + 10);
+          }}
+        />
+        <span className='pointer-events-none inline-block font-bold'>
+          {zoom}%
+        </span>
+        <Minus
+          className='active:rounded-full active:bg-slate-200'
+          onClick={() => {
+            if (zoom > 10) setZoom(zoom - 10);
+          }}
+        />
+      </div>
+    </div>
+  );
 };
