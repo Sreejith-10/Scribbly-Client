@@ -7,7 +7,7 @@ export interface IBoardStore {
   addShape: (shape: Shape) => void;
   removeShape: (shapeId: string) => void;
   currentShapeSelected: Shape | null;
-  setCurrentShapeSelected: (shape: Shape) => void;
+  setCurrentShapeSelected: (shape: Shape | null) => void;
   removeSelectedShape: () => void;
   changeShapeLayer: (shapeId: string, positionToBeMoved: number) => void;
 }
@@ -45,8 +45,8 @@ export const useBoardStore = create<IBoardStore>((set) => ({
 
       const previousOrAfterShape =
         state.shapes[
-          shapeIndex -
-            (positionToBeMoved > shapeIndex ? shapeIndex + 1 : shapeIndex - 1)
+        shapeIndex -
+        (positionToBeMoved > shapeIndex ? shapeIndex + 1 : shapeIndex - 1)
         ];
 
       const shapeToBeMoved = state.shapes[shapeIndex];

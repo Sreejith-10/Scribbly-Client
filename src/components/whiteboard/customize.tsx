@@ -21,10 +21,18 @@ const ActionProperties: Record<
     foregroundColor: true,
     lineThickness: true,
   },
-  circle: {},
+  circle: {
+    backgroundColor: true,
+    foregroundColor: true,
+    lineThickness: true,
+  },
   diamond: {},
-  arrow: {},
-  pencil: {},
+  arrow: {
+    foregroundColor: true,
+  },
+  pencil: {
+    foregroundColor: true,
+  },
   image: {},
   line: {},
   eraser: {},
@@ -58,7 +66,9 @@ export const Customize = () => {
                       <ColorPicker
                         title='Background'
                         defaultColor={currentSelectedShape.stroke as string}
-                        onChangeHandler={(color) => {}}
+                        onChangeHandler={(color) => {
+                          setStroke(color)
+                        }}
                       />
                     </div>
                   );
@@ -68,7 +78,7 @@ export const Customize = () => {
                       <ColorPicker
                         title='Foreground'
                         defaultColor={currentSelectedShape.fill as string}
-                        onChangeHandler={(color) => {}}
+                        onChangeHandler={(color) => { setFill(color) }}
                       />
                     </div>
                   );

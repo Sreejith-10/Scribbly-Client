@@ -43,4 +43,10 @@ export const useToolbarStore = create<IToolbarStore>((set) => ({
       borderRadius: 1,
     });
   },
+  tension: 1,
+  setTension: (tension) => {
+    set({
+      tension: tension,
+    });
+  },
 }));

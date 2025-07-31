@@ -1,9 +1,14 @@
+'use client';
+
 import { Menu, Monitor, Moon, Save, Sun, Trash2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import { ReactNode } from 'react';
 import { useTheme } from 'next-themes';
+import { useParams } from 'next/navigation';
+import { useShapeActions } from '@/hooks/mutation/shape';
+import { toast } from 'sonner';
 
 interface ICanvasMenu {
   onSave: () => void;
@@ -25,6 +30,8 @@ const themeIcons: { icon: ReactNode; value: string }[] = [
 ];
 
 export const CanvasMenu = ({ onSave }: ICanvasMenu) => {
+  const { id }: { id: string } = useParams();
+  const { reset } = useShapeActions(id);
   const { theme, setTheme, systemTheme } = useTheme();
   return (
     <div className='fixed top-5 left-5 z-50'>
@@ -44,6 +51,16 @@ export const CanvasMenu = ({ onSave }: ICanvasMenu) => {
             Save
           </Button>
           <Button
+            onClick={() => {
+              reset.mutate(id, {
+                onSuccess: () => {
+                  toast.success('Board reset');
+                },
+                onError: (error) => {
+                  toast.error(error.message);
+                },
+              });
+            }}
             variant='outline'
             className='flex items-center gap-2 font-semibold'
           >

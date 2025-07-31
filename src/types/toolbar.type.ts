@@ -15,4 +15,6 @@ export interface IToolbar {
   setBorderRadius: (borderR: number) => void;
   toolSelected: boolean;
   setToolSelected: (selected: boolean) => void;
+  tension: number;
+  setTension: (tension: number) => void;
 }

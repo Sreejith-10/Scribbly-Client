@@ -132,6 +132,15 @@ const redoShape = async <T>(id: string): Promise<ResponseDataType & T> => {
   }
 };
 
+const resetBoard = async <T>(id: string): Promise<ResponseDataType & T> => {
+  try {
+    const response = await AxiosInstance.patch(`/boards/${id}/reset`);
+    return response.data;
+  } catch (error) {
+    handleAxiosError(error);
+  }
+};
+
 export {
   getBoard,
   createBoard,
@@ -144,4 +153,5 @@ export {
   getBoardMetadataByBoardId,
   undoShape,
   redoShape,
+  resetBoard,
 };

@@ -73,7 +73,7 @@ export const NavBar = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <div className='flex h-9 w-9 items-center justify-center'>
-            <Image src='/icons/icon.png' alt='logo' width={100} height={100} />
+            <Image src='/public/icon.svg' alt='logo' width={100} height={100} />
           </div>
           <span className='text-xl font-bold'>Scribbly</span>
         </motion.div>
