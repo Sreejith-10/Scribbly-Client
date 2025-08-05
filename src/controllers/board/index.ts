@@ -141,6 +141,15 @@ const resetBoard = async <T>(id: string): Promise<ResponseDataType & T> => {
   }
 };
 
+const deleteBoard = async <T>(id: string): Promise<ResponseDataType & T> => {
+  try {
+    const response = await AxiosInstance.delete(`/boards/${id}`);
+    return response.data;
+  } catch (error) {
+    handleAxiosError(error);
+  }
+};
+
 export {
   getBoard,
   createBoard,
@@ -154,4 +163,5 @@ export {
   undoShape,
   redoShape,
   resetBoard,
+  deleteBoard,
 };

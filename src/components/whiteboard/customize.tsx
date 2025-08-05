@@ -67,7 +67,7 @@ export const Customize = () => {
                         title='Background'
                         defaultColor={currentSelectedShape.stroke as string}
                         onChangeHandler={(color) => {
-                          setStroke(color)
+                          setStroke(color);
                         }}
                       />
                     </div>
@@ -78,7 +78,9 @@ export const Customize = () => {
                       <ColorPicker
                         title='Foreground'
                         defaultColor={currentSelectedShape.fill as string}
-                        onChangeHandler={(color) => { setFill(color) }}
+                        onChangeHandler={(color) => {
+                          setFill(color);
+                        }}
                       />
                     </div>
                   );

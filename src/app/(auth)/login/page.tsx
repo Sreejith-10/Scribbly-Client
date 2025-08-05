@@ -49,7 +49,7 @@ export default function LoginPage() {
     });
   };
 
-  console.log(loginMutation.error)
+  console.log(loginMutation.error);
 
   return (
     <div className='flex flex-col gap-4 p-6 md:p-10'>
@@ -81,18 +81,20 @@ export default function LoginPage() {
                   <FormItem>
                     <div className='border-input bg-primary-foreground dark:bg-input/30 has-[:focus-visible]border-ring has-[:focus-visible]:ring-ring/50 relative flex h-10 w-full items-center gap-3 rounded-md border px-3 py-1 text-base shadow-xs transition-colors has-[:focus-visible]:ring-[3px]'>
                       <Mail
-                        className={`${form.formState.errors?.email
-                          ? 'text-destructive'
-                          : 'text-foreground'
-                          } size-6`}
+                        className={`${
+                          form.formState.errors?.email
+                            ? 'text-destructive'
+                            : 'text-foreground'
+                        } size-6`}
                       />
                       <FormControl>
                         <input
                           {...field}
-                          className={`${form.formState.errors?.email
-                            ? 'text-destructive'
-                            : 'text-foreground'
-                            } input-area w-full border-none outline-hidden`}
+                          className={`${
+                            form.formState.errors?.email
+                              ? 'text-destructive'
+                              : 'text-foreground'
+                          } input-area w-full border-none outline-hidden`}
                           placeholder=''
                         />
                       </FormControl>
@@ -110,20 +112,28 @@ export default function LoginPage() {
                 name='password'
                 render={({ field }) => (
                   <FormItem>
-                    <div className={`border-input bg-primary-foreground dark:bg-input/30 has-[:focus-visible]border-ring has-[:focus-visible]:ring-ring/50 relative flex h-10 w-full items-center gap-3 rounded-md border px-3 py-1 text-base shadow-xs transition-colors has-[:focus-visible]:ring-[3px]`}>
+                    <div
+                      className={`border-input bg-primary-foreground dark:bg-input/30 has-[:focus-visible]border-ring has-[:focus-visible]:ring-ring/50 relative flex h-10 w-full items-center gap-3 rounded-md border px-3 py-1 text-base shadow-xs transition-colors has-[:focus-visible]:ring-[3px]`}
+                    >
                       <Lock
-                        className={`${form.formState.errors?.password || loginMutation.error?.message === "password does not match"
-                          ? 'text-destructive'
-                          : 'text-foreground'
-                          } size-6`}
+                        className={`${
+                          form.formState.errors?.password ||
+                          loginMutation.error?.message ===
+                            'password does not match'
+                            ? 'text-destructive'
+                            : 'text-foreground'
+                        } size-6`}
                       />
                       <FormControl>
                         <input
                           {...field}
-                          className={`${form.formState.errors?.password || loginMutation.error?.message === "password does not match"
-                            ? 'text-destructive'
-                            : 'text-foreground'
-                            } input-area w-full border-none outline-hidden`}
+                          className={`${
+                            form.formState.errors?.password ||
+                            loginMutation.error?.message ===
+                              'password does not match'
+                              ? 'text-destructive'
+                              : 'text-foreground'
+                          } input-area w-full border-none outline-hidden`}
                           type={showPass ? 'text' : 'password'}
                           placeholder=''
                         />

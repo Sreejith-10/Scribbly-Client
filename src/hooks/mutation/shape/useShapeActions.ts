@@ -194,11 +194,14 @@ export const useShapeActions = (id: string) => {
         queryKeys.boards.detail(boardId),
       );
 
-      queryClient.setQueryData(queryKeys.boards.detail(boardId), (old: any) => ({
-        deltas: [],
-        currentState: {},
-        snapShot: {},
-      }));
+      queryClient.setQueryData(
+        queryKeys.boards.detail(boardId),
+        (old: any) => ({
+          deltas: [],
+          currentState: {},
+          snapShot: {},
+        }),
+      );
 
       return { previousState };
     },

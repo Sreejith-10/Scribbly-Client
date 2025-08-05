@@ -37,6 +37,7 @@ import {
   FormMessage,
 } from '../ui/form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useCreateBoard } from '@/hooks/mutation/board';
 
 interface IBoardCreationProps {
   open: boolean;
@@ -51,41 +52,32 @@ export const BoardCreation = ({ open, setOpen }: IBoardCreationProps) => {
 
   const router = useRouter();
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: ({
-      title,
-      description,
-      accessMode,
-    }: {
-      title: string;
-      description?: string;
-      accessMode: AccessMode;
-    }) =>
-      createBoard<{ board: IBoard; message: string }>(
-        title,
-        description,
-        accessMode,
-      ),
-    onSuccess: (response) => {
-      toast.success(response.message);
-      router.push(
-        `/board/${
-          response.board.accessMode === 'private' ? 'private' : 'public'
-        }/${response.board._id}`,
-      );
-    },
-    onError: (error) => {
-      console.log({ error });
-      toast.error(error.message);
-    },
-  });
+  const { mutate, isPending } = useCreateBoard();
 
   const submitHandler = (values: z.infer<typeof createBoardSchema>) => {
-    mutate({
-      title: values.title,
-      description: values.description,
-      accessMode: values.accessMode,
-    });
+    mutate(
+      {
+        title: values.title,
+        description: values.description,
+        accessMode: values.accessMode,
+      },
+      {
+        onSuccess: (response) => {
+          toast.success(response.message);
+          router.push(
+            `/board/${
+              response?.board?.board?.accessMode === 'private'
+                ? 'private'
+                : 'public'
+            }/${response?.board?.board?._id}`,
+          );
+        },
+        onError: (error) => {
+          console.log({ error });
+          toast.error(error.message);
+        },
+      },
+    );
   };
 
   return (

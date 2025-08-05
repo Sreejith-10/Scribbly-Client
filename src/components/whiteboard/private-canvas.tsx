@@ -33,11 +33,10 @@ const PrivateCanvasProps = ({
   handleDelta,
 }: Readonly<PrivateCanvasProps>) => {
   const [draftShape, setDraftShape] = useState<Shape | null>(null);
-  const [isDragging, setIsDragging] = useState<boolean>(false)
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const { action, stroke, fill, setIsShapeSelected, strokeWidth } =
     useToolbarStore();
-  const { currentShapeSelected, setCurrentShapeSelected } =
-    useBoardStore();
+  const { currentShapeSelected, setCurrentShapeSelected } = useBoardStore();
 
   const stageRef = useRef<Konva.Stage>(null);
   const isPainting = useRef<boolean>(false);
@@ -46,7 +45,8 @@ const PrivateCanvasProps = ({
   const tranformerRef = useRef<Konva.Transformer>(null);
   const lastUpdateTime = useRef(0);
   const throttleDelay = 50;
-  const isDraggable = (currentShapeSelected !== null) && (action === ActionType.SELECT);
+  const isDraggable =
+    currentShapeSelected !== null && action === ActionType.SELECT;
 
   useEffect(() => {
     if (!draftShape) return;
@@ -168,7 +168,7 @@ const PrivateCanvasProps = ({
             ...prev!,
             radius: Math.sqrt(
               Math.pow((position?.x ?? 0) - (prev?.x ?? 0), 2) +
-              Math.pow((position?.y ?? 0) - (prev?.y ?? 0), 2),
+                Math.pow((position?.y ?? 0) - (prev?.y ?? 0), 2),
             ),
           }));
           break;
@@ -212,9 +212,9 @@ const PrivateCanvasProps = ({
   }, [action, draftShape]);
 
   const pointerUpHandler = useCallback(() => {
-    if (currentShapeSelected) return
+    if (currentShapeSelected) return;
     if (draftShape) {
-      draftShape.draggable = false
+      draftShape.draggable = false;
       handleDelta({
         data: draftShape,
         operation: 'create',
@@ -228,7 +228,7 @@ const PrivateCanvasProps = ({
   }, [draftShape]);
 
   const onclickHandler = (e: KonvaEventObject<MouseEvent>) => {
-    if (e.evt.defaultPrevented || isPainting.current) return
+    if (e.evt.defaultPrevented || isPainting.current) return;
     const target = e.currentTarget;
     const id = target.id();
 
@@ -240,7 +240,7 @@ const PrivateCanvasProps = ({
         setDraftShape(e.currentTarget.attrs);
       }
     } else if (action === ActionType.ERASER) {
-      e.currentTarget.attrs.draggable = false
+      e.currentTarget.attrs.draggable = false;
       handleDelta({
         data: e.currentTarget.attrs,
         operation: 'delete',
@@ -249,42 +249,42 @@ const PrivateCanvasProps = ({
   };
 
   const onDragStartHandler = (e: KonvaEventObject<DragEvent>) => {
-    setIsDragging(true)
+    setIsDragging(true);
     if (action === ActionType.SELECT) {
       tranformerRef.current?.nodes([e.target]);
       setIsShapeSelected(true);
       setCurrentShapeSelected(e.target.attrs);
     }
-  }
+  };
 
   const onDragEndHandler = (e: KonvaEventObject<DragEvent>) => {
-    e.evt.preventDefault()
-    const node = e.target
+    e.evt.preventDefault();
+    const node = e.target;
 
     handleDelta({
       data: {
         ...node.attrs,
         draggable: false,
         x: node.x(),
-        y: node.y()
+        y: node.y(),
       },
-      operation: "update"
-    })
+      operation: 'update',
+    });
 
-    setDraftShape(null)
-    tranformerRef.current?.nodes([])
-    setCurrentShapeSelected(null)
-    setIsDragging(false)
-  }
+    setDraftShape(null);
+    tranformerRef.current?.nodes([]);
+    setCurrentShapeSelected(null);
+    setIsDragging(false);
+  };
 
   const transformerUpdate = () => {
     if (draftShape) {
       handleDelta({
-        operation: "update",
-        data: draftShape
-      })
+        operation: 'update',
+        data: draftShape,
+      });
     }
-  }
+  };
 
   const renderDraft = (shape: Shape | null) => {
     switch (shape?.type) {
@@ -370,7 +370,6 @@ const PrivateCanvasProps = ({
             tranformerRef.current?.nodes([]);
             setIsShapeSelected(false);
           }}
-
         />
 
         {shapes?.map((shape) => {
@@ -378,7 +377,11 @@ const PrivateCanvasProps = ({
             case ActionType.RECTANGLE:
               return (
                 <Rect
-                  opacity={isDragging && currentShapeSelected?.id === shape.id ? 0.5 : 1}
+                  opacity={
+                    isDragging && currentShapeSelected?.id === shape.id
+                      ? 0.5
+                      : 1
+                  }
                   key={shape.id}
                   {...shape}
                   id={shape.id}
@@ -429,7 +432,11 @@ const PrivateCanvasProps = ({
 
         {renderDraft(draftShape)}
 
-        <Transformer ref={tranformerRef} keepRatio={true} onPointerLeave={transformerUpdate} />
+        <Transformer
+          ref={tranformerRef}
+          keepRatio={true}
+          onPointerLeave={transformerUpdate}
+        />
       </Layer>
     </Stage>
   );

@@ -45,8 +45,8 @@ export const useBoardStore = create<IBoardStore>((set) => ({
 
       const previousOrAfterShape =
         state.shapes[
-        shapeIndex -
-        (positionToBeMoved > shapeIndex ? shapeIndex + 1 : shapeIndex - 1)
+          shapeIndex -
+            (positionToBeMoved > shapeIndex ? shapeIndex + 1 : shapeIndex - 1)
         ];
 
       const shapeToBeMoved = state.shapes[shapeIndex];

@@ -153,7 +153,7 @@ export default function RequestsPage() {
   const { data: user } = useUser();
   const requests = useCurrentUserRequests(user?._id ?? '');
   return (
-    <div className='p-2'>
+    <div className='p-4'>
       <DataTable columns={column} data={requests?.data?.requests ?? []} />
     </div>
   );

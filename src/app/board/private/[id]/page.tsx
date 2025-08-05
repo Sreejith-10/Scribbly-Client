@@ -33,7 +33,7 @@ export default function Page() {
     resizeShape,
     moveShape,
   } = useShapeActions(id);
-  console.log(data)
+  console.log(data);
   const deltaActions = (delta: DeltaProp) => {
     switch (delta.operation) {
       case 'create':

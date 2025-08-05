@@ -30,11 +30,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useBoardMetadatas } from '@/hooks/query/board';
 import { useUser } from '@/hooks/query/user';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { deleteBoard } from '@/controllers/board';
+import { AxiosError } from 'axios';
+import { queryClient } from '@/lib';
+import { queryKeys } from '@/lib/query-keys';
 
 function CreateBoardDialog({ onclick }: { onclick: () => void }) {
   return (
@@ -195,7 +199,22 @@ const column: ColumnDef<IBoardMetadata>[] = [
               <Pencil />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem className='cursor-pointer'>
+            <DropdownMenuItem
+              className='cursor-pointer'
+              onClick={async (e) => {
+                e.stopPropagation();
+                try {
+                  const res = await deleteBoard(row.original.boardId);
+                  queryClient.invalidateQueries({
+                    queryKey: queryKeys.boardMetadatas.query('all'),
+                  });
+                  toast.success(res.message);
+                } catch (error) {
+                  const e = error as AxiosError;
+                  toast.error(e.message);
+                }
+              }}
+            >
               <Trash />
               Delete
             </DropdownMenuItem>
@@ -208,11 +227,8 @@ const column: ColumnDef<IBoardMetadata>[] = [
 
 export default function Dashboard() {
   const [openDialog, setOpenDialog] = useState<boolean>(false);
-  const path = usePathname();
-  const router = useRouter();
 
   const { data, isLoading } = useBoardMetadatas();
-  const { data: user } = useUser();
 
   return (
     <>
@@ -235,17 +251,7 @@ export default function Dashboard() {
               <Loader className='m-auto size-10 animate-spin' />
             </span>
           ) : (
-            <DataTable
-              columns={column}
-              data={data?.boardMetadatas ?? []}
-              // onRowClick={(data) => {
-              // 	if (data.accessMode === "private") {
-              // 		router.push(`/board/private/${data.boardId}`);
-              // 	} else {
-              // 		router.push(`/board/join/${data.boardId}`);
-              // 	}
-              // }}
-            />
+            <DataTable columns={column} data={data?.boardMetadatas ?? []} />
           )}
         </div>
         {/* <Tabs defaultValue="all" className="w-full">
