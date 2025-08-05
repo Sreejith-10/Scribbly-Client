@@ -30,9 +30,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useRouter } from 'next/navigation';
 import { useBoardMetadatas } from '@/hooks/query/board';
-import { useUser } from '@/hooks/query/user';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { deleteBoard } from '@/controllers/board';
