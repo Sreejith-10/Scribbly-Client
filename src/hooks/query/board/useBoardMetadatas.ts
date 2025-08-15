@@ -1,7 +1,7 @@
 import { getBoardMetadata } from '@/controllers/board';
 import { queryKeys } from '@/lib/query-keys';
 import { IBoardMetadata } from '@/types';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 // export interface IMainBoardMetadata {
 // 	boardMetadata: BoardMetadata;
@@ -22,11 +22,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 // }
 
 export const useBoardMetadatas = (query: string = 'all') => {
-  const queryClient = useQueryClient();
-
-  return useQuery({
-    queryKey: queryKeys.boardMetadatas.query(query),
-    queryFn: () => getBoardMetadata<IBoardMetadata[]>(query),
-    enabled: !!queryClient.getQueryData(queryKeys.user.u),
-  });
+	return useQuery({
+		queryKey: queryKeys.boardMetadatas.query(query),
+		queryFn: () => getBoardMetadata<IBoardMetadata[]>(query),
+	});
 };

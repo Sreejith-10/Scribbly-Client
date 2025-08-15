@@ -4,11 +4,14 @@ import { ICollaborationRequest } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 
 export const useRequestStatus = (boardId: string, userId: string) => {
-  return useQuery({
-    queryKey: queryKeys.collaborationRequests.status(boardId, userId),
-    queryFn: () =>
-      getRequestStatus<
-        Pick<ICollaborationRequest, 'status' | 'requestCount' | 'updatedAt'>
-      >(boardId, userId),
-  });
+	return useQuery({
+		queryKey: queryKeys.collaborationRequests.status(boardId, userId),
+		queryFn: () =>
+			getRequestStatus<
+				Pick<
+					ICollaborationRequest,
+					'status' | 'requestCount' | 'updatedAt'
+				>
+			>(boardId, userId),
+	});
 };
