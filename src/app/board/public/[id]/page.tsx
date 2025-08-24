@@ -13,6 +13,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { useBoardMetadata } from '@/hooks/query/board';
 import { useUser } from '@/hooks/query/user';
 import { useCollaborators } from '@/hooks/query/collaborators';
+import { AlertTriangle } from 'lucide-react';
 
 const PublicCanvas = dynamic(
   () => import('@/components/whiteboard/public-canvas'),
@@ -108,17 +109,26 @@ export default function Page() {
 
   return (
     <div className='relative h-screen w-full'>
-      <ToolBar />
-      < CanvasMenu
+      {permission ? <ToolBar /> :
+        <div className='w-fit h-10 bg-destructive/30 p-2 outline-2 outline-destructive/50 rounded-md fixed top-5 left-1/2 z-9 -translate-x-1/2 '>
+          <div className='flex items-center justify-between gap-4'>
+            <AlertTriangle className='' />
+            <span className='text-sm'>You don't have permission to edit</span>
+          </div>
+        </div>
+      }
+      <CanvasMenu
         onSave={() => console.log('save')}
         isOwner={boardMeta?.boardMetadata.ownerId === user?._id}
-      />       <PublicCanvas
+      />
+      <PublicCanvas
         shapes={shapes}
         width={window.innerWidth}
         height={window.innerHeight}
         className='z-[-99999] h-full w-full'
         handleDelta={handleDelta}
         setShapes={setShapes}
+        canEdit={permission}
       />
       {!['free', 'eraser'].includes(action) ||
         (action === 'select' && isSelected) ? (
