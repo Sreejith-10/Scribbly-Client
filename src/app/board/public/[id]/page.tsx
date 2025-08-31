@@ -14,6 +14,8 @@ import { useBoardMetadata } from '@/hooks/query/board';
 import { useUser } from '@/hooks/query/user';
 import { useCollaborators } from '@/hooks/query/collaborators';
 import { AlertTriangle } from 'lucide-react';
+import { useThrottle } from '@/hooks/useThrottle';
+import { Pointer } from '@/components/ui/pointer';
 
 const PublicCanvas = dynamic(
   () => import('@/components/whiteboard/public-canvas'),
@@ -29,10 +31,14 @@ export default function Page() {
   const { data: collaborators } = useCollaborators(id);
 
   const [shapes, setShapes] = useState<Shape[]>([]);
+  const [userPointer, setUserPointer] = useState<{ x: number, y: number }>({ x: 0, y: 0 })
+  const [hideCustomCursor, setHideCustomCursor] = useState<boolean>(false)
+
   const action = useToolbarStore((state) => state.action);
   const isSelected = useToolbarStore((state) => state.isShapeSelected);
 
   const { socket, emit, on, socketDisconnect } = useSocket();
+  const throttledMouse = useThrottle()
 
   useEffect(() => {
     if (!socket) return;
@@ -40,10 +46,7 @@ export default function Page() {
     emit('joinBoard', { boardId: id });
 
     const handleBoardState = (data: IBoardState) => {
-      const { currentState } = data;
-
-      console.log(data, 'boardUpdate');
-      setShapes((prev) => [...prev, ...Object.values(currentState)]);
+      setShapes(Object.values(data.currentState))
     };
     const handleUserJoined = (data) => {
       console.log(data);
@@ -55,6 +58,9 @@ export default function Page() {
     on('boardState', handleBoardState);
     on('userJoined', handleUserJoined);
     on('boardUpdate', handleUpdatedBoard);
+    on('mouseMove', (data) => {
+      console.log(data)
+    })
 
     return () => {
       socketDisconnect();
@@ -63,12 +69,23 @@ export default function Page() {
 
   useEffect(() => {
     const handleBeforeReload = () => {
+      setShapes([])
       emit('leaveBoard', { boardId: id });
     };
 
+    const handleMouseMove = (event: MouseEvent) => {
+      setUserPointer(() => ({ x: event.clientX, y: event.clientY }))
+      throttledMouse(2000, () => {
+        emit("mouseMove", { x: event.clientX, y: event.clientY })
+      })
+    }
+
     window.addEventListener('beforeunload', handleBeforeReload);
+    window.addEventListener('mousemove', handleMouseMove)
+
     return () => {
       window.removeEventListener('beforeunload', handleBeforeReload);
+      window.removeEventListener('mousemove', handleMouseMove)
     };
   }, [emit]);
 
@@ -116,10 +133,21 @@ export default function Page() {
     currentUser?.role === 'edit' ||
     boardMeta?.boardMetadata.owner._id === user?._id;
 
+  const handleCursorHideHandler = () => {
+    setHideCustomCursor(true)
+  }
+
+  const handleCursorShowHandler = () => {
+    setHideCustomCursor(false)
+  }
+
   return (
-    <div className='relative h-screen w-full'>
+    <div className={`relative h-screen w-full ${hideCustomCursor ? "cursor-auto" : "cursor-none"}`}>
+      {
+        !hideCustomCursor ? <Pointer x={userPointer.x} y={userPointer.y} color='red' username='You' /> : null
+      }
       {permission ? (
-        <ToolBar />
+        <div onMouseEnter={handleCursorHideHandler} onMouseLeave={handleCursorShowHandler}><ToolBar /></div>
       ) : (
         <div className='bg-destructive/30 outline-destructive/50 fixed top-5 left-1/2 z-9 h-10 w-fit -translate-x-1/2 rounded-md p-2 outline-2'>
           <div className='flex items-center justify-between gap-4'>
@@ -130,26 +158,30 @@ export default function Page() {
           </div>
         </div>
       )}
-      <CanvasMenu
-        onSave={() => console.log('save')}
-        isOwner={boardMeta?.boardMetadata.ownerId === user?._id}
-      />
-      <PublicCanvas
-        shapes={shapes}
-        width={window.innerWidth}
-        height={window.innerHeight}
-        className='z-[-99999] h-full w-full'
-        handleDelta={handleDelta}
-        setShapes={setShapes}
-        canEdit={permission}
-      />
+      <div onMouseEnter={handleCursorHideHandler} onMouseLeave={handleCursorShowHandler}>
+        <CanvasMenu
+          onSave={() => console.log('save')}
+          isOwner={boardMeta?.boardMetadata.ownerId === user?._id}
+        />
+      </div>
+      <div>
+        <PublicCanvas
+          shapes={shapes}
+          width={window.innerWidth}
+          height={window.innerHeight}
+          className='z-[-99999] h-full w-full'
+          handleDelta={handleDelta}
+          setShapes={setShapes}
+          canEdit={permission}
+        />
+      </div>
       {!['free', 'eraser'].includes(action) ||
         (action === 'select' && isSelected) ? permission ? (
-          <div className='absolute bottom-5 left-1/2 -translate-x-1/2'>
+          <div className='absolute bottom-5 left-1/2 -translate-x-1/2' onMouseEnter={handleCursorHideHandler} onMouseLeave={handleCursorShowHandler}>
             <Customize />
           </div>
         ) : null : null}
-      <div className='fixed bottom-14 left-5'>
+      <div className='fixed bottom-14 left-5' onMouseEnter={handleCursorHideHandler} onMouseLeave={handleCursorShowHandler}>
         <UndoRedo />
       </div>
     </div>
