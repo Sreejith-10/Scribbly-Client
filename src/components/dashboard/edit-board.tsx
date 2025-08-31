@@ -36,15 +36,24 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateBoard } from '@/hooks/mutation/board';
 
-interface IBoardCreationProps {
+interface IEditBoardProps {
 	open: boolean;
 	setOpen: (state: boolean) => void;
+	defaultValues?: z.infer<typeof createBoardSchema>;
 }
 
-export const BoardCreation = ({ open, setOpen }: IBoardCreationProps) => {
+export const EditBoard = ({
+	open,
+	setOpen,
+	defaultValues,
+}: IEditBoardProps) => {
 	const form = useForm<z.infer<typeof createBoardSchema>>({
 		resolver: zodResolver(createBoardSchema),
-		defaultValues: { title: '', description: '', accessMode: 'private' },
+		defaultValues: {
+			title: defaultValues?.title,
+			description: defaultValues?.description,
+			accessMode: defaultValues?.accessMode,
+		},
 	});
 
 	const router = useRouter();
@@ -52,6 +61,8 @@ export const BoardCreation = ({ open, setOpen }: IBoardCreationProps) => {
 	const { mutate, isPending } = useCreateBoard();
 
 	const submitHandler = (values: z.infer<typeof createBoardSchema>) => {
+		console.log(values === defaultValues);
+		return;
 		mutate(
 			{
 				title: values.title,
@@ -61,13 +72,12 @@ export const BoardCreation = ({ open, setOpen }: IBoardCreationProps) => {
 			{
 				onSuccess: (response) => {
 					toast.success(response.message);
-					setOpen(false);
 					router.push(
 						`/board/${
-							response?.board?.accessMode === 'private'
+							response?.board?.board?.accessMode === 'private'
 								? 'private'
 								: 'public'
-						}/${response?.board._id}`,
+						}/${response?.board?.board?._id}`,
 					);
 				},
 				onError: (error) => {
@@ -103,7 +113,10 @@ export const BoardCreation = ({ open, setOpen }: IBoardCreationProps) => {
 									<FormItem>
 										<FormLabel>Title</FormLabel>
 										<FormControl {...field}>
-											<Input {...field} placeholder='' />
+											<Input
+												{...field}
+												value={field.value}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>

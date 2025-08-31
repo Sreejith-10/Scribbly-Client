@@ -26,13 +26,13 @@ export default function Page() {
   const { id }: { id: string } = useParams();
   const { data: boardMeta } = useBoardMetadata(id);
   const { data: user } = useUser();
-  const { data: collaborators } = useCollaborators(id)
+  const { data: collaborators } = useCollaborators(id);
 
   const [shapes, setShapes] = useState<Shape[]>([]);
   const action = useToolbarStore((state) => state.action);
   const isSelected = useToolbarStore((state) => state.isShapeSelected);
 
-  const { socket, emit, on } = useSocket();
+  const { socket, emit, on, socketDisconnect } = useSocket();
 
   useEffect(() => {
     if (!socket) return;
@@ -56,17 +56,21 @@ export default function Page() {
     on('userJoined', handleUserJoined);
     on('boardUpdate', handleUpdatedBoard);
 
-    // Cleanup: remove listeners
     return () => {
-      setShapes([]);
-      socket.off('boardState', handleBoardState);
-      socket.off('userJoined', handleUserJoined);
-      socket.off('boardUpdate', handleUpdatedBoard);
-      socket.disconnect();
+      socketDisconnect();
     };
-  }, [socket, on, emit, id]);
+  }, [socket]);
 
-  console.log(collaborators?.collaborators)
+  useEffect(() => {
+    const handleBeforeReload = () => {
+      emit('leaveBoard', { boardId: id });
+    };
+
+    window.addEventListener('beforeunload', handleBeforeReload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeReload);
+    };
+  }, [emit]);
 
   const handleDelta = (delta: DeltaProp) => {
     switch (delta.operation) {
@@ -102,21 +106,30 @@ export default function Page() {
       default:
         break;
     }
-    emit('boardUpdate', delta);
+    emit('boardUpdate', { ...delta, shapeId: delta.data.id });
   };
 
-  const permission = collaborators?.collaborators.find((u) => u.userId === user?._id)?.role === 'edit'
+  const currentUser = collaborators?.collaborators.find(
+    (u) => u.userId === user?._id,
+  );
+  const permission =
+    currentUser?.role === 'edit' ||
+    boardMeta?.boardMetadata.owner._id === user?._id;
 
   return (
     <div className='relative h-screen w-full'>
-      {permission ? <ToolBar /> :
-        <div className='w-fit h-10 bg-destructive/30 p-2 outline-2 outline-destructive/50 rounded-md fixed top-5 left-1/2 z-9 -translate-x-1/2 '>
+      {permission ? (
+        <ToolBar />
+      ) : (
+        <div className='bg-destructive/30 outline-destructive/50 fixed top-5 left-1/2 z-9 h-10 w-fit -translate-x-1/2 rounded-md p-2 outline-2'>
           <div className='flex items-center justify-between gap-4'>
             <AlertTriangle className='' />
-            <span className='text-sm'>You don't have permission to edit</span>
+            <span className='text-sm'>
+              You don't have permission to edit
+            </span>
           </div>
         </div>
-      }
+      )}
       <CanvasMenu
         onSave={() => console.log('save')}
         isOwner={boardMeta?.boardMetadata.ownerId === user?._id}
@@ -131,11 +144,11 @@ export default function Page() {
         canEdit={permission}
       />
       {!['free', 'eraser'].includes(action) ||
-        (action === 'select' && isSelected) ? (
-        <div className='absolute bottom-5 left-1/2 -translate-x-1/2'>
-          <Customize />
-        </div>
-      ) : null}
+        (action === 'select' && isSelected) ? permission ? (
+          <div className='absolute bottom-5 left-1/2 -translate-x-1/2'>
+            <Customize />
+          </div>
+        ) : null : null}
       <div className='fixed bottom-14 left-5'>
         <UndoRedo />
       </div>

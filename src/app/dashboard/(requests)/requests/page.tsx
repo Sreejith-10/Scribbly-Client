@@ -21,14 +21,14 @@ import { useUser } from '@/hooks/query/user';
 import { IBoard, ICollaborationRequest } from '@/types';
 import { IUser } from '@/types/user.type';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Trash } from 'lucide-react';
+import { ArrowUpDown, Loader, MoreHorizontal, Trash } from 'lucide-react';
 
 interface IUserCollabRequest extends ICollaborationRequest {
 	board: IBoard[];
 	owner: IUser[];
 }
 
-export const column: ColumnDef<IUserCollabRequest>[] = [
+const column: ColumnDef<IUserCollabRequest>[] = [
 	{
 		accessorKey: 'board',
 		header: ({ column }) => {
@@ -47,6 +47,9 @@ export const column: ColumnDef<IUserCollabRequest>[] = [
 		},
 		cell: ({ row }) => {
 			const board = row.getValue<IBoard[]>('board');
+			if (board.length === 0) {
+				return <span>Board no longer exist</span>;
+			}
 			return <span>{board[0]?.title}</span>;
 		},
 	},
@@ -115,6 +118,9 @@ export const column: ColumnDef<IUserCollabRequest>[] = [
 				row.getValue<{ username: string; avatarUrl: string | null }[]>(
 					'owner',
 				);
+			if (author.length === 0) {
+				return <span>Board removed</span>;
+			}
 			return (
 				<Tooltip>
 					<TooltipTrigger>
@@ -166,10 +172,19 @@ export const column: ColumnDef<IUserCollabRequest>[] = [
 
 export default function RequestsPage() {
 	const { data: user } = useUser();
-	const requests = useCurrentUserRequests(user?._id ?? '');
+	const { data: requests, isLoading } = useCurrentUserRequests(
+		user?._id ?? '',
+	);
+	console.log(requests?.requests);
 	return (
 		<div className='p-4'>
-			<DataTable columns={column} data={requests?.data?.requests ?? []} />
+			{isLoading ? (
+				<span className='inline-block h-full w-full py-8'>
+					<Loader className='m-auto size-10 animate-spin' />
+				</span>
+			) : (
+				<DataTable columns={column} data={requests?.requests ?? []} />
+			)}
 		</div>
 	);
 }

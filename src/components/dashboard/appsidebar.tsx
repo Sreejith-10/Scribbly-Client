@@ -1,4 +1,4 @@
-import { Clock, Grid3X3, Star, UserPlus, Users } from 'lucide-react';
+import { Grid3X3, UserPlus, Users } from 'lucide-react';
 import {
 	Sidebar,
 	SidebarContent,
@@ -61,12 +61,6 @@ export function AppSidebar() {
 									<Link href={'/dashboard/requests'}>
 										<span>Requests</span>
 									</Link>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
-							<SidebarMenuItem>
-								<SidebarMenuButton>
-									<Users className='size-4' />
-									<span>Manage boards</span>
 								</SidebarMenuButton>
 							</SidebarMenuItem>
 						</SidebarMenu>

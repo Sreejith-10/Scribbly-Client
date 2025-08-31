@@ -14,12 +14,7 @@ export const useCreateBoard = () => {
 			title: string;
 			description?: string;
 			accessMode: AccessMode;
-		}) =>
-			createBoard<{ board: IBoard; message: string }>(
-				title,
-				description,
-				accessMode,
-			),
+		}) => createBoard<IBoard>(title, description, accessMode),
 		onSettled: () => {
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.boardMetadatas.query('all'),
