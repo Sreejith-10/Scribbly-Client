@@ -16,6 +16,7 @@ import { useCollaborators } from '@/hooks/query/collaborators';
 import { AlertTriangle } from 'lucide-react';
 import { useThrottle } from '@/hooks/useThrottle';
 import { Pointer } from '@/components/ui/pointer';
+import { toast } from 'sonner';
 
 const PublicCanvas = dynamic(
   () => import('@/components/whiteboard/public-canvas'),
@@ -33,6 +34,7 @@ export default function Page() {
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [userPointer, setUserPointer] = useState<{ x: number, y: number }>({ x: 0, y: 0 })
   const [hideCustomCursor, setHideCustomCursor] = useState<boolean>(false)
+  const [collaboratorsCursors, setCollaboratorsCursors] = useState<Map<string, { clientId: string, x: number, y: number, username: string }>>(new Map())
 
   const action = useToolbarStore((state) => state.action);
   const isSelected = useToolbarStore((state) => state.isShapeSelected);
@@ -44,23 +46,50 @@ export default function Page() {
     if (!socket) return;
 
     emit('joinBoard', { boardId: id });
+    emit('activeUsers')
 
     const handleBoardState = (data: IBoardState) => {
       setShapes(Object.values(data.currentState))
     };
-    const handleUserJoined = (data) => {
-      console.log(data);
+
+    const handleUserJoined = (data: { username: string, userId: string }) => {
+      toast.info(`${data.username} joined board`, { position: "top-left" })
+      emit('activeUsers')
     };
+
+
     const handleUpdatedBoard = (data: IBoardState) => {
       setShapes(Object.values(data.currentState));
     };
 
+    const handleActiveUsers = (data: { userId: string, username: string, clientId: string }[]) => {
+      const filteredUsers = data.filter((u) => u.userId !== user?._id)
+
+      filteredUsers.forEach((item) => {
+        setCollaboratorsCursors((prev) => {
+          if (!prev.has(item.userId)) {
+            return prev.set(item.userId, { clientId: item.clientId, x: 0, y: 0, username: item.username })
+          }
+
+          return prev
+        })
+      })
+    }
+
+    const handleMouseMove = (data: { x: number, y: number, clientId: string, userId: string }) => {
+      setCollaboratorsCursors((prev) => {
+        if (prev.has(data.userId)) {
+          return prev.set(data.userId, { ...prev.get(data.userId)!, x: data.x, y: data.y })
+        }
+        return prev
+      })
+    }
+
     on('boardState', handleBoardState);
     on('userJoined', handleUserJoined);
     on('boardUpdate', handleUpdatedBoard);
-    on('mouseMove', (data) => {
-      console.log(data)
-    })
+    on('mouseMove', handleMouseMove)
+    on('activeUsers', handleActiveUsers)
 
     return () => {
       socketDisconnect();
@@ -129,6 +158,7 @@ export default function Page() {
   const currentUser = collaborators?.collaborators.find(
     (u) => u.userId === user?._id,
   );
+
   const permission =
     currentUser?.role === 'edit' ||
     boardMeta?.boardMetadata.owner._id === user?._id;
@@ -146,10 +176,15 @@ export default function Page() {
       {
         !hideCustomCursor ? <Pointer x={userPointer.x} y={userPointer.y} color='red' username='You' /> : null
       }
+      {
+        collaboratorsCursors ? Array.from(collaboratorsCursors)?.map(([key, value]) => (
+          <Pointer {...value} color='blue' key={key} className='z-0' />
+        )) : null
+      }
       {permission ? (
         <div onMouseEnter={handleCursorHideHandler} onMouseLeave={handleCursorShowHandler}><ToolBar /></div>
       ) : (
-        <div className='bg-destructive/30 outline-destructive/50 fixed top-5 left-1/2 z-9 h-10 w-fit -translate-x-1/2 rounded-md p-2 outline-2'>
+        <div className='bg-destructive/30 outline-destructive/50 fixed top-5 left-1/2 z-10 h-10 w-fit -translate-x-1/2 rounded-md p-2 outline-2'>
           <div className='flex items-center justify-between gap-4'>
             <AlertTriangle className='' />
             <span className='text-sm'>

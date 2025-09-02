@@ -1,3 +1,4 @@
+import { cn } from "@/lib";
 import { memo } from "react";
 
 interface PointerProps {
@@ -5,13 +6,14 @@ interface PointerProps {
   y: number;
   color: string;
   username: string;
+  className?: string
 }
 
-export const Pointer = memo(({ color, username, x, y }: PointerProps) => {
+export const Pointer = memo(({ color, username, x, y, className }: PointerProps) => {
   return (
     <div
-      className='pointer-events-none absolute z-10 transition-all duration-200 ease-out'
-      style={{
+      className={cn('pointer-events-none absolute z-10 transition-all duration-200 ease-out', className
+      )} style={{
         left: x,
         top: y,
         transform: 'translate(-2px, -2px)',
