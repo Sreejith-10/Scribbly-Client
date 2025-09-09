@@ -19,206 +19,263 @@ import { Pointer } from '@/components/ui/pointer';
 import { toast } from 'sonner';
 
 const PublicCanvas = dynamic(
-  () => import('@/components/whiteboard/public-canvas'),
-  {
-    ssr: false,
-  },
+	() => import('@/components/whiteboard/public-canvas'),
+	{
+		ssr: false,
+	},
 );
 
 export default function Page() {
-  const { id }: { id: string } = useParams();
-  const { data: boardMeta } = useBoardMetadata(id);
-  const { data: user } = useUser();
-  const { data: collaborators } = useCollaborators(id);
+	const { id }: { id: string } = useParams();
+	const { data: boardMeta } = useBoardMetadata(id);
+	const { data: user } = useUser();
+	const { data: collaborators } = useCollaborators(id);
 
-  const [shapes, setShapes] = useState<Shape[]>([]);
-  const [userPointer, setUserPointer] = useState<{ x: number, y: number }>({ x: 0, y: 0 })
-  const [hideCustomCursor, setHideCustomCursor] = useState<boolean>(false)
-  const [collaboratorsCursors, setCollaboratorsCursors] = useState<Map<string, { clientId: string, x: number, y: number, username: string }>>(new Map())
+	const [shapes, setShapes] = useState<Shape[]>([]);
+	const [userPointer, setUserPointer] = useState<{ x: number; y: number }>({
+		x: 0,
+		y: 0,
+	});
+	const [hideCustomCursor, setHideCustomCursor] = useState<boolean>(false);
+	const [collaboratorsCursors, setCollaboratorsCursors] = useState<
+		Map<
+			string,
+			{ clientId: string; x: number; y: number; username: string }
+		>
+	>(new Map());
 
-  const action = useToolbarStore((state) => state.action);
-  const isSelected = useToolbarStore((state) => state.isShapeSelected);
+	const action = useToolbarStore((state) => state.action);
+	const isSelected = useToolbarStore((state) => state.isShapeSelected);
 
-  const { socket, emit, on, socketDisconnect } = useSocket();
-  const throttledMouse = useThrottle()
+	const { socket, emit, on, socketDisconnect } = useSocket();
+	const throttledMouse = useThrottle();
 
-  useEffect(() => {
-    if (!socket) return;
+	useEffect(() => {
+		if (!socket) return;
 
-    emit('joinBoard', { boardId: id });
-    emit('activeUsers')
+		emit('joinBoard', { boardId: id });
+		emit('activeUsers');
 
-    const handleBoardState = (data: IBoardState) => {
-      setShapes(Object.values(data.currentState))
-    };
+		const handleBoardState = (data: IBoardState) => {
+			setShapes(Object.values(data.currentState));
+		};
 
-    const handleUserJoined = (data: { username: string, userId: string }) => {
-      toast.info(`${data.username} joined board`, { position: "top-left" })
-      emit('activeUsers')
-    };
+		const handleUserJoined = (data: {
+			username: string;
+			userId: string;
+		}) => {
+			toast.info(`${data.username} joined board`, {
+				position: 'top-left',
+			});
+			emit('activeUsers');
+		};
 
+		const handleUpdatedBoard = (data: IBoardState) => {
+			setShapes(Object.values(data.currentState));
+		};
 
-    const handleUpdatedBoard = (data: IBoardState) => {
-      setShapes(Object.values(data.currentState));
-    };
+		const handleActiveUsers = (
+			data: { userId: string; username: string; clientId: string }[],
+		) => {
+			const filteredUsers = data.filter((u) => u.userId !== user?._id);
 
-    const handleActiveUsers = (data: { userId: string, username: string, clientId: string }[]) => {
-      const filteredUsers = data.filter((u) => u.userId !== user?._id)
+			filteredUsers.forEach((item) => {
+				setCollaboratorsCursors((prev) => {
+					if (!prev.has(item.userId) && item.userId) {
+						return prev.set(item.userId, {
+							clientId: item.clientId,
+							x: 0,
+							y: 0,
+							username: item.username,
+						});
+					}
 
-      filteredUsers.forEach((item) => {
-        setCollaboratorsCursors((prev) => {
-          if (!prev.has(item.userId)) {
-            return prev.set(item.userId, { clientId: item.clientId, x: 0, y: 0, username: item.username })
-          }
+					return prev;
+				});
+			});
+		};
 
-          return prev
-        })
-      })
-    }
+		const handleMouseMove = (data: {
+			x: number;
+			y: number;
+			clientId: string;
+			userId: string;
+		}) => {
+			setCollaboratorsCursors((prev) => {
+				if (prev.has(data.userId)) {
+					return prev.set(data.userId, {
+						...prev.get(data.userId)!,
+						x: data.x,
+						y: data.y,
+					});
+				}
+				return prev;
+			});
+		};
 
-    const handleMouseMove = (data: { x: number, y: number, clientId: string, userId: string }) => {
-      setCollaboratorsCursors((prev) => {
-        if (prev.has(data.userId)) {
-          return prev.set(data.userId, { ...prev.get(data.userId)!, x: data.x, y: data.y })
-        }
-        return prev
-      })
-    }
+		const handleLeaveUser = (data: {
+			clientId: string;
+			userId: string;
+		}) => {
+			setCollaboratorsCursors((prev) => {
+				if (prev.has(data.userId)) {
+					prev.delete(data.userId);
+				}
+				return prev;
+			});
+		};
 
-    on('boardState', handleBoardState);
-    on('userJoined', handleUserJoined);
-    on('boardUpdate', handleUpdatedBoard);
-    on('mouseMove', handleMouseMove)
-    on('activeUsers', handleActiveUsers)
+		on('boardState', handleBoardState);
+		on('userJoined', handleUserJoined);
+		on('boardUpdate', handleUpdatedBoard);
+		on('mouseMove', handleMouseMove);
+		on('activeUsers', handleActiveUsers);
+		on('userLeft', handleLeaveUser);
 
-    return () => {
-      socketDisconnect();
-    };
-  }, [socket]);
+		return () => {
+			socketDisconnect();
+		};
+	}, [socket]);
 
-  useEffect(() => {
-    const handleBeforeReload = () => {
-      setShapes([])
-      emit('leaveBoard', { boardId: id });
-    };
+	useEffect(() => {
+		const handleBeforeReload = () => {
+			setShapes([]);
+			emit('leaveBoard', { boardId: id });
+		};
 
-    const handleMouseMove = (event: MouseEvent) => {
-      setUserPointer(() => ({ x: event.clientX, y: event.clientY }))
-      throttledMouse(2000, () => {
-        emit("mouseMove", { x: event.clientX, y: event.clientY })
-      })
-    }
+		const handleMouseMove = (event: MouseEvent) => {
+			setUserPointer(() => ({ x: event.clientX, y: event.clientY }));
+			throttledMouse(2000, () => {
+				emit('mouseMove', { x: event.clientX, y: event.clientY });
+			});
+		};
 
-    window.addEventListener('beforeunload', handleBeforeReload);
-    window.addEventListener('mousemove', handleMouseMove)
+		window.addEventListener('beforeunload', handleBeforeReload);
+		window.addEventListener('mousemove', handleMouseMove);
 
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeReload);
-      window.removeEventListener('mousemove', handleMouseMove)
-    };
-  }, [emit]);
+		return () => {
+			window.removeEventListener('beforeunload', handleBeforeReload);
+			window.removeEventListener('mousemove', handleMouseMove);
+		};
+	}, [emit]);
 
-  const handleDelta = (delta: DeltaProp) => {
-    switch (delta.operation) {
-      case 'create':
-        setShapes((prev) => [...prev, delta.data]);
-        break;
-      case 'update':
-        setShapes((prev) => {
-          return prev.map((shape) =>
-            shape.id === delta.data.id ? delta.data : shape,
-          );
-        });
-        break;
-      case 'delete':
-        setShapes((prev) =>
-          prev.filter((shape) => shape.id !== delta.data.id),
-        );
-        break;
-      case 'resize':
-        setShapes((prev) => {
-          return prev.map((shape) =>
-            shape.id === delta.data.id ? delta.data : shape,
-          );
-        });
-        break;
-      case 'free':
-        setShapes((prev) => {
-          return prev.map((shape) =>
-            shape.id === delta.data.id ? delta.data : shape,
-          );
-        });
-        break;
-      default:
-        break;
-    }
-    emit('boardUpdate', { ...delta, shapeId: delta.data.id });
-  };
+	const handleDelta = (delta: DeltaProp) => {
+		switch (delta.operation) {
+			case 'create':
+				setShapes((prev) => [...prev, delta.data]);
+				break;
+			case 'update':
+				setShapes((prev) => {
+					return prev.map((shape) =>
+						shape.id === delta.data.id ? delta.data : shape,
+					);
+				});
+				break;
+			case 'delete':
+				setShapes((prev) =>
+					prev.filter((shape) => shape.id !== delta.data.id),
+				);
+				break;
+			default:
+				break;
+		}
+		emit('boardUpdate', { ...delta, shapeId: delta.data.id });
+	};
 
-  const currentUser = collaborators?.collaborators.find(
-    (u) => u.userId === user?._id,
-  );
+	const currentUser = collaborators?.collaborators.find(
+		(u) => u.userId === user?._id,
+	);
 
-  const permission =
-    currentUser?.role === 'edit' ||
-    boardMeta?.boardMetadata.owner._id === user?._id;
+	const permission =
+		currentUser?.role === 'edit' ||
+		boardMeta?.boardMetadata.owner._id === user?._id;
 
-  const handleCursorHideHandler = () => {
-    setHideCustomCursor(true)
-  }
+	const handleCursorHideHandler = () => {
+		setHideCustomCursor(true);
+	};
 
-  const handleCursorShowHandler = () => {
-    setHideCustomCursor(false)
-  }
+	const handleCursorShowHandler = () => {
+		setHideCustomCursor(false);
+	};
 
-  return (
-    <div className={`relative h-screen w-full ${hideCustomCursor ? "cursor-auto" : "cursor-none"}`}>
-      {
-        !hideCustomCursor ? <Pointer x={userPointer.x} y={userPointer.y} color='red' username='You' /> : null
-      }
-      {
-        collaboratorsCursors ? Array.from(collaboratorsCursors)?.map(([key, value]) => (
-          <Pointer {...value} color='blue' key={key} className='z-0' />
-        )) : null
-      }
-      {permission ? (
-        <div onMouseEnter={handleCursorHideHandler} onMouseLeave={handleCursorShowHandler}><ToolBar /></div>
-      ) : (
-        <div className='bg-destructive/30 outline-destructive/50 fixed top-5 left-1/2 z-10 h-10 w-fit -translate-x-1/2 rounded-md p-2 outline-2'>
-          <div className='flex items-center justify-between gap-4'>
-            <AlertTriangle className='' />
-            <span className='text-sm'>
-              You don't have permission to edit
-            </span>
-          </div>
-        </div>
-      )}
-      <div onMouseEnter={handleCursorHideHandler} onMouseLeave={handleCursorShowHandler}>
-        <CanvasMenu
-          onSave={() => console.log('save')}
-          isOwner={boardMeta?.boardMetadata.ownerId === user?._id}
-        />
-      </div>
-      <div>
-        <PublicCanvas
-          shapes={shapes}
-          width={window.innerWidth}
-          height={window.innerHeight}
-          className='z-[-99999] h-full w-full'
-          handleDelta={handleDelta}
-          setShapes={setShapes}
-          canEdit={permission}
-        />
-      </div>
-      {!['free', 'eraser'].includes(action) ||
-        (action === 'select' && isSelected) ? permission ? (
-          <div className='absolute bottom-5 left-1/2 -translate-x-1/2' onMouseEnter={handleCursorHideHandler} onMouseLeave={handleCursorShowHandler}>
-            <Customize />
-          </div>
-        ) : null : null}
-      <div className='fixed bottom-14 left-5' onMouseEnter={handleCursorHideHandler} onMouseLeave={handleCursorShowHandler}>
-        <UndoRedo />
-      </div>
-    </div>
-  );
+	return (
+		<div
+			className={`relative h-screen w-full ${hideCustomCursor ? 'cursor-auto' : 'cursor-none'}`}
+		>
+			{!hideCustomCursor ? (
+				<Pointer
+					x={userPointer.x}
+					y={userPointer.y}
+					color='red'
+					username='You'
+				/>
+			) : null}
+			{collaboratorsCursors
+				? Array.from(collaboratorsCursors)?.map(([key, value]) => (
+						<Pointer
+							{...value}
+							color='blue'
+							key={key}
+							className='z-0'
+						/>
+					))
+				: null}
+			{permission ? (
+				<div
+					onMouseEnter={handleCursorHideHandler}
+					onMouseLeave={handleCursorShowHandler}
+				>
+					<ToolBar />
+				</div>
+			) : (
+				<div className='bg-destructive/30 outline-destructive/50 fixed top-5 left-1/2 z-10 h-10 w-fit -translate-x-1/2 rounded-md p-2 outline-2'>
+					<div className='flex items-center justify-between gap-4'>
+						<AlertTriangle className='' />
+						<span className='text-sm'>
+							You don't have permission to edit
+						</span>
+					</div>
+				</div>
+			)}
+			<div
+				onMouseEnter={handleCursorHideHandler}
+				onMouseLeave={handleCursorShowHandler}
+			>
+				<CanvasMenu
+					onSave={() => console.log('save')}
+					isOwner={boardMeta?.boardMetadata.ownerId === user?._id}
+				/>
+			</div>
+			<div>
+				<PublicCanvas
+					shapes={shapes}
+					width={window.innerWidth}
+					height={window.innerHeight}
+					className='z-[-99999] h-full w-full'
+					handleDelta={handleDelta}
+					setShapes={setShapes}
+					canEdit={permission}
+				/>
+			</div>
+			{!['free', 'eraser'].includes(action) ||
+			(action === 'select' && isSelected) ? (
+				permission ? (
+					<div
+						className='absolute bottom-5 left-1/2 -translate-x-1/2'
+						onMouseEnter={handleCursorHideHandler}
+						onMouseLeave={handleCursorShowHandler}
+					>
+						<Customize />
+					</div>
+				) : null
+			) : null}
+			<div
+				className='fixed bottom-14 left-5'
+				onMouseEnter={handleCursorHideHandler}
+				onMouseLeave={handleCursorShowHandler}
+			>
+				<UndoRedo />
+			</div>
+		</div>
+	);
 }
