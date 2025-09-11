@@ -1,6 +1,6 @@
 'use client';
 
-import { Pointer2 } from '@/components/ui/pointer-2';
+import { Pointer } from '@/components/ui/pointer';
 import { CanvasMenu } from '@/components/whiteboard/canvas-menu';
 import { Customize } from '@/components/whiteboard/customize';
 import { ToolBar } from '@/components/whiteboard/tool-bar';
@@ -10,87 +10,133 @@ import { useBoardMetadata, useBoardState } from '@/hooks/query/board';
 import { useUser } from '@/hooks/query/user';
 import { useToolbarStore } from '@/stores/canvas/useToolbarStore';
 import { DeltaProp } from '@/types';
-import { Loader } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 
 const PrivateCanvas = dynamic(
-	() => import('@/components/whiteboard/private-canvas'),
-	{
-		ssr: false,
-	},
+  () => import('@/components/whiteboard/private-canvas'),
+  {
+    ssr: false,
+  },
 );
 
 export default function Page() {
-	const action = useToolbarStore((state) => state.action);
-	const isShapeSelected = useToolbarStore((state) => state.isShapeSelected);
-	const { id } = useParams<{ id: string }>();
-	const { data: boardMeta } = useBoardMetadata(id);
-	const { data, isLoading, isFetched } = useBoardState(id);
-	const { data: user } = useUser();
-	const {
-		addNewShape,
-		editShape,
-		removeShape,
-		snapShot,
-		resizeShape,
-		moveShape,
-	} = useShapeActions(id);
-	const deltaActions = (delta: DeltaProp) => {
-		switch (delta.operation) {
-			case 'create':
-				addNewShape.mutate(delta.data);
-				break;
-			case 'update':
-				editShape.mutate(delta.data);
-				break;
-			case 'delete':
-				removeShape.mutate(delta.data);
-				break;
-			case 'resize':
-				resizeShape.mutate(delta.data);
-				break;
-			case 'free':
-				moveShape.mutate(delta.data);
-				break;
-			default:
-				break;
-		}
-	};
+  const [userPointer, setUserPointer] = useState<{ x: number, y: number }>({ x: 0, y: 0 })
+  const [hideCustomCursor, setHideCustomCursor] = useState<boolean>(false)
 
-	console.log(isShapeSelected, action);
+  const action = useToolbarStore((state) => state.action);
+  const isShapeSelected = useToolbarStore((state) => state.isShapeSelected);
 
-	if (isLoading) {
-		return <h1>Loading....</h1>;
-	}
+  const { id } = useParams<{ id: string }>();
 
-	return (
-		<div className='relative h-screen w-full'>
-			<>
-				<ToolBar />
-				<CanvasMenu
-					onSave={snapShot.mutate}
-					isOwner={boardMeta?.boardMetadata.ownerId === user?._id}
-				/>
-				<PrivateCanvas
-					width={window.innerWidth}
-					height={window.innerHeight}
-					className='h-full w-full'
-					shapes={Object.values(data?.currentState ?? [])}
-					handleDelta={(shape) => deltaActions(shape)}
-				/>
-				{!['free', 'eraser'].includes(action) ||
-				(action === 'select' && isShapeSelected) ? (
-					<div className='absolute bottom-5 left-1/2 -translate-x-1/2'>
-						<Customize />
-					</div>
-				) : null}
+  const { data: boardMeta } = useBoardMetadata(id);
+  const { data, isLoading, isFetched } = useBoardState(id);
+  const { data: user } = useUser();
+  const {
+    addNewShape,
+    editShape,
+    removeShape,
+    snapShot,
+    resizeShape,
+    moveShape,
+  } = useShapeActions(id);
 
-				<div className='fixed bottom-14 left-5'>
-					<UndoRedo />
-				</div>
-			</>
-		</div>
-	);
+  const deltaActions = (delta: DeltaProp) => {
+    switch (delta.operation) {
+      case 'create':
+        addNewShape.mutate(delta.data);
+        break;
+      case 'update':
+        editShape.mutate(delta.data);
+        break;
+      case 'delete':
+        removeShape.mutate(delta.data);
+        break;
+      case 'resize':
+        resizeShape.mutate(delta.data);
+        break;
+      case 'free':
+        moveShape.mutate(delta.data);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleCursorHideHandler = () => {
+    setHideCustomCursor(true);
+  };
+
+  const handleCursorShowHandler = () => {
+    setHideCustomCursor(false);
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setUserPointer(() => ({ x: event.clientX, y: event.clientY }))
+    }
+
+    window.addEventListener("mousemove", handleMouseMove)
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+    }
+  }, [])
+
+  if (isLoading) {
+    return <h1>Loading....</h1>;
+  }
+
+  return (
+    <div
+      className={`relative h-screen w-full ${hideCustomCursor ? 'cursor-auto' : 'cursor-none'}`}
+    >
+      {
+        !hideCustomCursor ?
+          <Pointer {...userPointer} color='red' />
+          : null
+      }
+      <div
+        onMouseEnter={handleCursorHideHandler}
+        onMouseLeave={handleCursorShowHandler}
+      >
+        <ToolBar />
+      </div>
+      <div
+        onMouseEnter={handleCursorHideHandler}
+        onMouseLeave={handleCursorShowHandler}
+      >
+        <CanvasMenu
+          onSave={snapShot.mutate}
+          isOwner={boardMeta?.boardMetadata.ownerId === user?._id}
+        />
+      </div>
+      <PrivateCanvas
+        width={window.innerWidth}
+        height={window.innerHeight}
+        className='h-full w-full'
+        shapes={Object.values(data?.currentState ?? [])}
+        handleDelta={(shape) => deltaActions(shape)}
+      />
+      {!['free', 'eraser'].includes(action) ||
+        (action === 'select' && isShapeSelected) ? (
+        <div
+          className='absolute bottom-5 left-1/2 -translate-x-1/2'
+          onMouseEnter={handleCursorHideHandler}
+          onMouseLeave={handleCursorShowHandler}
+        >
+          <Customize />
+        </div>
+      ) : null}
+
+      <div
+        className='fixed bottom-14 left-5'
+        onMouseEnter={handleCursorHideHandler}
+        onMouseLeave={handleCursorShowHandler}
+      >
+        <UndoRedo />
+      </div>
+    </div>
+  );
 }
