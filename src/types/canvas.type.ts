@@ -35,6 +35,10 @@ export interface ScribbleState extends Konva.LineConfig {
 	points: number[];
 }
 
+export interface TextState extends Konva.TextConfig {
+	id: string;
+}
+
 export enum StrokeWidth {
 	NORMAL = 5,
 	MEDIUM = 10,

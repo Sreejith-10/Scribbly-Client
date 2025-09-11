@@ -5,6 +5,33 @@ import {
 } from '@/components/ui/popover';
 import { useState } from 'react';
 
+const predefinedColors = [
+	'#ef4444',
+	'#f97316',
+	'#f59e0b',
+	'#eab308',
+	'#84cc16',
+	'#22c55e',
+	'#10b981',
+	'#14b8a6',
+	'#06b6d4',
+	'#0ea5e9',
+	'#3b82f6',
+	'#6366f1',
+	'#8b5cf6',
+	'#a855f7',
+	'#d946ef',
+	'#ec4899',
+	'#f43f5e',
+	'#64748b',
+	'#6b7280',
+	'#374151',
+	'#111827',
+	'#000000',
+	'#ffffff',
+	'#0002050',
+];
+
 export const ColorPicker = ({
 	title,
 	defaultColor = '#FFFFFFF',
@@ -17,40 +44,13 @@ export const ColorPicker = ({
 	const [selectedColor, setSelectedColor] = useState<string>(defaultColor);
 	const [open, setOpen] = useState<boolean>(false);
 
-	const predefinedColors = [
-		'#ef4444',
-		'#f97316',
-		'#f59e0b',
-		'#eab308',
-		'#84cc16',
-		'#22c55e',
-		'#10b981',
-		'#14b8a6',
-		'#06b6d4',
-		'#0ea5e9',
-		'#3b82f6',
-		'#6366f1',
-		'#8b5cf6',
-		'#a855f7',
-		'#d946ef',
-		'#ec4899',
-		'#f43f5e',
-		'#64748b',
-		'#6b7280',
-		'#374151',
-		'#111827',
-		'#000000',
-		'#ffffff',
-		'#0002050',
-	];
-
 	const handlePredefinedColorClick = (color: string) => {
 		setSelectedColor(color);
 		setOpen(false);
 	};
 
 	return (
-		<Popover open={open}>
+		<Popover open={open} onOpenChange={(open) => setOpen(open)}>
 			<PopoverTrigger asChild>
 				<div
 					className='size-6 cursor-pointer rounded border-2 shadow-lg ring-2 ring-offset-1 transition-transform duration-200 hover:scale-110'
