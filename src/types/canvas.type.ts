@@ -1,46 +1,46 @@
 import Konva from 'konva';
 
 export enum ActionType {
-	FREE = 'free',
-	SELECT = 'select',
-	RECTANGLE = 'rectangle',
-	CIRCLE = 'circle',
-	DIAMOND = 'diamond',
-	ARROW = 'arrow',
-	LINE = 'line',
-	PENCIL = 'pencil',
-	TEXT = 'text',
-	IMAGE = 'image',
-	ERASER = 'eraser',
+  FREE = 'free',
+  SELECT = 'select',
+  RECTANGLE = 'rectangle',
+  CIRCLE = 'circle',
+  DIAMOND = 'diamond',
+  ARROW = 'arrow',
+  LINE = 'line',
+  PENCIL = 'pencil',
+  TEXT = 'text',
+  // IMAGE = 'image',
+  ERASER = 'eraser',
 }
 
 export interface RectState extends Konva.RectConfig {
-	id: string;
+  id: string;
 }
 
 export interface CircleState extends Konva.CircleConfig {
-	id: string;
+  id: string;
 }
 
 export interface LineState extends Konva.LineConfig {
-	id: string;
+  id: string;
 }
 
 export interface ArrowState extends Konva.ArrowConfig {
-	id: string;
+  id: string;
 }
 
 export interface ScribbleState extends Konva.LineConfig {
-	id: string;
-	points: number[];
+  id: string;
+  points: number[];
 }
 
 export interface TextState extends Konva.TextConfig {
-	id: string;
+  id: string;
 }
 
 export enum StrokeWidth {
-	NORMAL = 5,
-	MEDIUM = 10,
-	THICK = 15,
+  NORMAL = 5,
+  MEDIUM = 10,
+  THICK = 15,
 }
