@@ -22,6 +22,8 @@ import {
   Text,
 } from 'react-konva';
 import { Textarea } from '../ui/textarea';
+import { useUser } from '@/hooks/query/user';
+import { toast } from 'sonner';
 
 interface PublicCanvasProps {
   action?: ActionType;
@@ -32,6 +34,9 @@ interface PublicCanvasProps {
   setShapes: Dispatch<SetStateAction<Shape[]>>;
   handleDelta: (delta: DeltaProp) => void;
   canEdit?: boolean;
+  onShapeSelect: (shapeId: string) => void;
+  onShapeDisSelect: (shapeId: string) => void;
+  lockedShapes: Record<PropertyKey, string>;
 }
 
 const PublicCanvasProps = ({
@@ -41,7 +46,12 @@ const PublicCanvasProps = ({
   shapes,
   handleDelta,
   canEdit,
+  onShapeSelect,
+  onShapeDisSelect,
+  lockedShapes,
 }: Readonly<PublicCanvasProps>) => {
+  const { data: user } = useUser();
+
   const [draftShape, setDraftShape] = useState<Shape | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
@@ -49,7 +59,11 @@ const PublicCanvasProps = ({
 
   const { action, stroke, fill, setIsShapeSelected, strokeWidth } =
     useToolbarStore();
-  const { setCurrentShapeSelected, removeSelectedShape } = useBoardStore();
+  const {
+    currentShapeSelected,
+    setCurrentShapeSelected,
+    removeSelectedShape,
+  } = useBoardStore();
 
   const stageRef = useRef<Konva.Stage>(null);
   const isPainting = useRef<boolean>(false);
@@ -57,7 +71,7 @@ const PublicCanvasProps = ({
   const initialPosition = useRef<{ x: number; y: number } | null>(null);
   const tranformerRef = useRef<Konva.Transformer>(null);
   const lastUpdateTime = useRef(0);
-  const textInputRef = useRef<HTMLTextAreaElement>(null)
+  const textInputRef = useRef<HTMLTextAreaElement>(null);
 
   const throttleDelay = 50;
   const isDraggable = action === ActionType.SELECT;
@@ -90,7 +104,7 @@ const PublicCanvasProps = ({
           stroke: stroke,
           fill,
           strokeWidth: 2,
-          cornerRadius: 10
+          cornerRadius: 10,
         }));
         break;
 
@@ -187,15 +201,26 @@ const PublicCanvasProps = ({
       ) {
         switch (draftShape?.type) {
           case ActionType.RECTANGLE:
-            const width = Math.abs(position.x - initialPosition.current.x)
-            const height = Math.abs(position.y - initialPosition.current.y)
-            const x = Math.min(position.x, initialPosition.current.x)
-            const y = Math.min(position.y, initialPosition.current.y)
+            const width = Math.abs(
+              position.x - initialPosition.current.x,
+            );
+            const height = Math.abs(
+              position.y - initialPosition.current.y,
+            );
+            const x = Math.min(
+              position.x,
+              initialPosition.current.x,
+            );
+            const y = Math.min(
+              position.y,
+              initialPosition.current.y,
+            );
             setDraftShape((prev) => ({
               ...prev!,
               width,
               height,
-              x, y
+              x,
+              y,
             }));
             break;
 
@@ -261,6 +286,7 @@ const PublicCanvasProps = ({
   );
 
   const pointerUpHandler = useCallback(() => {
+    if (action === ActionType.SELECT) return
     if (draftShape) {
       handleDelta({
         data: draftShape,
@@ -280,10 +306,18 @@ const PublicCanvasProps = ({
     if (!canEdit) return;
     const target = e.currentTarget;
     const id = target.id();
+
+    const locked = lockedShapes[id]
+    if (locked) {
+      toast.info('shape is currently locked')
+      return
+    }
+
     const shape = shapes.find((shape) => shape.id === id);
 
     if (action === ActionType.SELECT) {
       if (target) {
+        onShapeSelect(shape?.id!);
         tranformerRef.current?.nodes([target]);
         setIsShapeSelected(true);
         setCurrentShapeSelected(shape!);
@@ -346,6 +380,17 @@ const PublicCanvasProps = ({
     handleDelta({ operation: 'update', data: e.currentTarget.attrs });
   };
 
+  const handleOutsideClick = () => {
+    if (currentShapeSelected?.id) {
+      onShapeDisSelect(currentShapeSelected?.id)
+    }
+    tranformerRef.current?.nodes([]);
+    setIsShapeSelected(false);
+    setDraftShape(null);
+    setEditingTextId(null);
+
+  }
+
   const renderDraft = (draftShape: Shape | null) => {
     switch (draftShape?.type) {
       case ActionType.RECTANGLE:
@@ -354,7 +399,10 @@ const PublicCanvasProps = ({
             key={draftShape.id}
             {...draftShape}
             id={draftShape.id}
-            draggable={isDraggable}
+            draggable={
+              isDraggable &&
+              currentShapeSelected?.id === draftShape.id
+            }
             onClick={onclickHandler}
           />
         );
@@ -364,7 +412,10 @@ const PublicCanvasProps = ({
             key={draftShape.id}
             {...draftShape}
             id={draftShape.id}
-            draggable={isDraggable}
+            draggable={
+              isDraggable &&
+              currentShapeSelected?.id === draftShape.id
+            }
             onClick={onclickHandler}
           />
         );
@@ -375,7 +426,10 @@ const PublicCanvasProps = ({
             key={draftShape.id}
             {...draftShape}
             id={draftShape.id}
-            draggable={isDraggable}
+            draggable={
+              isDraggable &&
+              currentShapeSelected?.id === draftShape.id
+            }
             onClick={onclickHandler}
           />
         );
@@ -385,7 +439,10 @@ const PublicCanvasProps = ({
             key={draftShape.id}
             {...draftShape}
             id={draftShape.id}
-            draggable={isDraggable}
+            draggable={
+              isDraggable &&
+              currentShapeSelected?.id === draftShape.id
+            }
             onClick={onclickHandler}
           />
         );
@@ -396,13 +453,16 @@ const PublicCanvasProps = ({
             {...draftShape}
             id={draftShape.id}
             points={draftShape.points}
-            draggable={isDraggable}
+            draggable={
+              isDraggable &&
+              currentShapeSelected?.id === draftShape.id
+            }
             onClick={onclickHandler}
             tension={0.5}
           />
         );
       case ActionType.TEXT:
-        return (<Text key={draftShape.id} {...draftShape} />);
+        return <Text key={draftShape.id} {...draftShape} />;
       default:
         return null;
     }
@@ -421,11 +481,11 @@ const PublicCanvasProps = ({
         } else if (editingTextId) {
           setEditingTextId(null);
           setTextValue('');
-          setDraftShape(null)
-          tranformerRef.current?.nodes([])
+          setDraftShape(null);
+          tranformerRef.current?.nodes([]);
         } else {
-          setDraftShape(null)
-          tranformerRef.current?.nodes([])
+          setDraftShape(null);
+          tranformerRef.current?.nodes([]);
         }
       } else if (
         e.key === 'Enter' &&
@@ -464,12 +524,7 @@ const PublicCanvasProps = ({
             x={0}
             y={0}
             id='bg'
-            onClick={() => {
-              tranformerRef.current?.nodes([]);
-              setIsShapeSelected(false);
-              setDraftShape(null);
-              setEditingTextId(null);
-            }}
+            onClick={handleOutsideClick}
           />
 
           {shapes?.map((shape) => {
@@ -480,7 +535,11 @@ const PublicCanvasProps = ({
                     key={shape.id}
                     {...shape}
                     id={shape.id}
-                    draggable={isDraggable}
+                    draggable={
+                      isDraggable &&
+                      currentShapeSelected?.id ===
+                      shape.id
+                    }
                     onClick={onclickHandler}
                     onDragEnd={onDragEndHandler}
                   />
@@ -491,7 +550,11 @@ const PublicCanvasProps = ({
                     key={shape.id}
                     {...shape}
                     id={shape.id}
-                    draggable={isDraggable}
+                    draggable={
+                      isDraggable &&
+                      currentShapeSelected?.id ===
+                      shape.id
+                    }
                     onClick={onclickHandler}
                     onDragEnd={onDragEndHandler}
                   />
@@ -503,7 +566,11 @@ const PublicCanvasProps = ({
                     {...shape}
                     key={shape.id}
                     id={shape.id}
-                    draggable={isDraggable}
+                    draggable={
+                      isDraggable &&
+                      currentShapeSelected?.id ===
+                      shape.id
+                    }
                     onClick={onclickHandler}
                     onDragEnd={onDragEndHandler}
                   />
@@ -513,7 +580,11 @@ const PublicCanvasProps = ({
                   <Line
                     key={shape.id}
                     {...shape}
-                    draggable={isDraggable}
+                    draggable={
+                      isDraggable &&
+                      currentShapeSelected?.id ===
+                      shape.id
+                    }
                     onClick={(e) => onclickHandler(e)}
                     onDragEnd={onDragEndHandler}
                   />
@@ -524,7 +595,11 @@ const PublicCanvasProps = ({
                     key={shape.id}
                     {...shape}
                     id={shape.id}
-                    draggable={isDraggable}
+                    draggable={
+                      isDraggable &&
+                      currentShapeSelected?.id ===
+                      shape.id
+                    }
                     onClick={onclickHandler}
                     onDragEnd={onDragEndHandler}
                   />
@@ -538,7 +613,9 @@ const PublicCanvasProps = ({
                     onClick={onclickHandler}
                     onDblClick={onDoubleClickHandler}
                     draggable={
-                      isDraggable
+                      isDraggable &&
+                      currentShapeSelected?.id ===
+                      shape.id
                     }
                     onDragEnd={onDragEndHandler}
                   />
@@ -550,19 +627,21 @@ const PublicCanvasProps = ({
 
           {renderDraft(draftShape)}
 
-          <Transformer ref={tranformerRef} keepRatio={true} />
+          <Transformer
+            ref={tranformerRef}
+            keepRatio={true}
+            anchorStroke='red'
+          />
         </Layer>
       </Stage>
-      {
-        editingTextId && (
-          <Textarea
-            ref={textInputRef}
-            className='w-fit'
-            onChange={(e) => setTextValue(e.target.value)}
-            onBlur={handleTextCompletion}
-          />
-        )
-      }
+      {editingTextId && (
+        <Textarea
+          ref={textInputRef}
+          className='w-fit'
+          onChange={(e) => setTextValue(e.target.value)}
+          onBlur={handleTextCompletion}
+        />
+      )}
     </>
   );
 };
