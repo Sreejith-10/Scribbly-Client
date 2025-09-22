@@ -81,6 +81,8 @@ export default function Page() {
       const filteredUsers = data.filter((u) => u.userId !== user?._id);
 
       filteredUsers.forEach((item) => {
+        const user = collaborators?.collaborators.find((c) => c.userId === item.userId)
+        if (user?.role === "view") return;
         setCollaboratorsCursors((prev) => {
           if (!prev.has(item.userId) && item.userId) {
             return prev.set(item.userId, {
@@ -160,6 +162,7 @@ export default function Page() {
     };
 
     const handleMouseMove = (event: MouseEvent) => {
+      if (!permission) return
       setUserPointer(() => ({ x: event.clientX, y: event.clientY }));
       throttledMouse(2000, () => {
         emit('mouseMove', { x: event.clientX, y: event.clientY });
@@ -226,14 +229,14 @@ export default function Page() {
     <div
       className={`relative h-screen w-full ${hideCustomCursor ? 'cursor-auto' : 'cursor-none'}`}
     >
-      {!hideCustomCursor ? (
+      {!hideCustomCursor ? permission ? (
         <Pointer
           x={userPointer.x}
           y={userPointer.y}
           color='red'
           username='You'
         />
-      ) : null}
+      ) : null : null}
       {collaboratorsCursors
         ? Array.from(collaboratorsCursors)?.map(([key, value]) => (
           <Pointer
