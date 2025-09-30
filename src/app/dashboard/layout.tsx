@@ -5,24 +5,24 @@ import { AppSidebar } from '@/components/dashboard/appsidebar';
 import { Topbar } from '@/components/dashboard/apptopbar';
 
 export const metadata: Metadata = {
-	title: 'Dashboard',
-	description: 'User dashboard',
+  title: 'Dashboard',
+  description: 'User dashboard',
 };
 
 interface DashboardLayoutProps {
-	children: ReactNode;
+  children: ReactNode;
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-	return (
-		<div>
-			<SidebarProvider>
-				<AppSidebar />
-				<SidebarInset>
-					<Topbar />
-					{children}
-				</SidebarInset>
-			</SidebarProvider>
-		</div>
-	);
+  return (
+    <div>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <Topbar />
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
+    </div>
+  );
 }

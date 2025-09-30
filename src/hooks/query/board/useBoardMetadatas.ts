@@ -22,8 +22,8 @@ import { useQuery } from '@tanstack/react-query';
 // }
 
 export const useBoardMetadatas = (query: string = 'all') => {
-	return useQuery({
-		queryKey: queryKeys.boardMetadatas.query(query),
-		queryFn: () => getBoardMetadata<IBoardMetadata[]>(query),
-	});
+  return useQuery({
+    queryKey: queryKeys.boardMetadatas.query(query),
+    queryFn: () => getBoardMetadata<IBoardMetadata[]>(query),
+  });
 };

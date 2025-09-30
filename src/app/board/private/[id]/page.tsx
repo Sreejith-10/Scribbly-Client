@@ -121,9 +121,7 @@ export default function Page() {
     <div
       className={`relative h-screen w-full ${hideCustomCursor ? 'cursor-auto' : 'cursor-none'}`}
     >
-      {!hideCustomCursor ? (
-        <Pointer {...userPointer} color='red' />
-      ) : null}
+      {!hideCustomCursor ? <Pointer {...userPointer} color='red' /> : null}
       <div
         onMouseEnter={handleCursorHideHandler}
         onMouseLeave={handleCursorShowHandler}
@@ -148,15 +146,13 @@ export default function Page() {
         handleDelta={(shape) => deltaActions(shape)}
       />
       {!['free', 'eraser'].includes(action) ||
-        (action === 'select' && isShapeSelected) ? (
+      (action === 'select' && isShapeSelected) ? (
         <div
           className='absolute bottom-5 left-1/2 -translate-x-1/2'
           onMouseEnter={handleCursorHideHandler}
           onMouseLeave={handleCursorShowHandler}
         >
-          <Customize
-            onPropertyChange={(args) => handlePropertyChange(args)}
-          />
+          <Customize onPropertyChange={(args) => handlePropertyChange(args)} />
         </div>
       ) : null}
 

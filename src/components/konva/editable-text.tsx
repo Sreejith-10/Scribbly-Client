@@ -1,5 +1,5 @@
 interface IEditableTextProps {
-	x: number;
+  x: number;
 }
 
 export const EditableText = () => {};

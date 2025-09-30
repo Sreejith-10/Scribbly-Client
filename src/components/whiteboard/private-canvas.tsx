@@ -58,7 +58,7 @@ const PrivateCanvasProps = ({
     currentShapeSelected !== null && action === ActionType.SELECT;
 
   const pointerDownHandler = useCallback(() => {
-    if (['move', 'select', 'eraser'].includes(action)) return;
+    if (['free', 'select', 'eraser'].includes(action)) return;
 
     const stage = stageRef.current;
     if (!stage) return;
@@ -108,12 +108,7 @@ const PrivateCanvasProps = ({
           ...prev,
           id,
           type,
-          points: [
-            position.x,
-            position.y,
-            position.x + 20,
-            position.y + 20,
-          ],
+          points: [position.x, position.y, position.x + 20, position.y + 20],
           stroke: stroke,
           strokeWidth: 2,
           fill,
@@ -153,8 +148,9 @@ const PrivateCanvasProps = ({
           y: position.y,
           text: 'Double click to edit',
           fontSize: 16,
-          fontFamily: 'Arial',
-          strokeWidth: 4,
+          fontFamily: 'JetBrains Mono',
+          strokeWidth: 1,
+          stroke,
         }));
         break;
 
@@ -164,7 +160,7 @@ const PrivateCanvasProps = ({
   }, [action, fill, stroke, strokeWidth]);
 
   const pointerMoveHandler = useCallback(() => {
-    if (['move', 'select', 'eraser'].includes(action)) return;
+    if (['free', 'select', 'eraser'].includes(action)) return;
 
     const now = new Date().getTime();
     if (now - lastUpdateTime.current < throttleDelay) return;
@@ -177,15 +173,16 @@ const PrivateCanvasProps = ({
     if (position?.x && position?.y && initialPosition.current) {
       switch (draftShape?.type) {
         case ActionType.RECTANGLE:
-          const width = Math.abs(position.x - initialPosition.current.x)
-          const height = Math.abs(position.y - initialPosition.current.y)
-          const x = Math.min(position.x, initialPosition.current.x)
-          const y = Math.min(position.y, initialPosition.current.y)
+          const width = Math.abs(position.x - initialPosition.current.x);
+          const height = Math.abs(position.y - initialPosition.current.y);
+          const x = Math.min(position.x, initialPosition.current.x);
+          const y = Math.min(position.y, initialPosition.current.y);
           setDraftShape((prev) => ({
             ...prev!,
             width,
             height,
-            x, y
+            x,
+            y,
           }));
           break;
 
@@ -194,10 +191,7 @@ const PrivateCanvasProps = ({
             ...prev!,
             radius: Math.sqrt(
               Math.pow((position?.x ?? 0) - (prev?.x ?? 0), 2) +
-              Math.pow(
-                (position?.y ?? 0) - (prev?.y ?? 0),
-                2,
-              ),
+                Math.pow((position?.y ?? 0) - (prev?.y ?? 0), 2),
             ),
           }));
           break;
@@ -230,11 +224,7 @@ const PrivateCanvasProps = ({
           setDraftShape((prev) => ({
             ...prev!,
             tension: 0.5,
-            points: [
-              ...prev?.points,
-              position?.x ?? 0,
-              position?.y ?? 0,
-            ],
+            points: [...prev?.points, position?.x ?? 0, position?.y ?? 0],
           }));
           break;
         case ActionType.TEXT:
@@ -311,7 +301,7 @@ const PrivateCanvasProps = ({
 
   const onDoubleClickHandler = useCallback(
     (e: KonvaEventObject<MouseEvent>) => {
-      if (['eraser'].includes(action)) return;
+      if (['free', 'eraser'].includes(action)) return;
 
       const shape = e.target.attrs;
       const shapeData = shapes.find((s) => s.id === shape.id);
@@ -374,17 +364,13 @@ const PrivateCanvasProps = ({
         } else if (editingTextId) {
           setEditingTextId(null);
           setTextValue('');
-          setDraftShape(null)
-          tranformerRef.current?.nodes([])
+          setDraftShape(null);
+          tranformerRef.current?.nodes([]);
         } else {
-          setDraftShape(null)
-          tranformerRef.current?.nodes([])
+          setDraftShape(null);
+          tranformerRef.current?.nodes([]);
         }
-      } else if (
-        e.key === 'Enter' &&
-        editingTextId &&
-        textInputRef.current
-      ) {
+      } else if (e.key === 'Enter' && editingTextId && textInputRef.current) {
         handleTextCompletion();
       }
     };
@@ -404,9 +390,7 @@ const PrivateCanvasProps = ({
             key={shape.id}
             {...shape}
             id={shape.id}
-            draggable={
-              isDraggable && currentShapeSelected.id === shape.id
-            }
+            draggable={isDraggable && currentShapeSelected.id === shape.id}
             onClick={onclickHandler}
           />
         );
@@ -416,9 +400,7 @@ const PrivateCanvasProps = ({
             key={shape.id}
             {...shape}
             id={shape.id}
-            draggable={
-              isDraggable && currentShapeSelected.id === shape.id
-            }
+            draggable={isDraggable && currentShapeSelected.id === shape.id}
             onClick={onclickHandler}
           />
         );
@@ -429,9 +411,7 @@ const PrivateCanvasProps = ({
             {...shape}
             id={shape.id}
             points={shape.points}
-            draggable={
-              isDraggable && currentShapeSelected.id === shape.id
-            }
+            draggable={isDraggable && currentShapeSelected.id === shape.id}
             onClick={onclickHandler}
           />
         );
@@ -441,9 +421,7 @@ const PrivateCanvasProps = ({
             key={shape.id}
             {...shape}
             id={shape.id}
-            draggable={
-              isDraggable && currentShapeSelected.id === shape.id
-            }
+            draggable={isDraggable && currentShapeSelected.id === shape.id}
             onClick={onclickHandler}
           />
         );
@@ -455,9 +433,7 @@ const PrivateCanvasProps = ({
             id={shape.id}
             points={shape.points}
             tension={0.5}
-            draggable={
-              isDraggable && currentShapeSelected.id === shape.id
-            }
+            draggable={isDraggable && currentShapeSelected.id === shape.id}
             onClick={onclickHandler}
           />
         );
@@ -505,8 +481,7 @@ const PrivateCanvasProps = ({
                     id={shape.id}
                     onClick={onclickHandler}
                     draggable={
-                      isDraggable &&
-                      currentShapeSelected.id === shape.id
+                      isDraggable && currentShapeSelected.id === shape.id
                     }
                     onDragEnd={onDragEndHandler}
                   />
@@ -519,8 +494,7 @@ const PrivateCanvasProps = ({
                     id={shape.id}
                     onClick={onclickHandler}
                     draggable={
-                      isDraggable &&
-                      currentShapeSelected.id === shape.id
+                      isDraggable && currentShapeSelected.id === shape.id
                     }
                     onDragEnd={onDragEndHandler}
                   />
@@ -534,8 +508,7 @@ const PrivateCanvasProps = ({
                     id={shape.id}
                     onClick={onclickHandler}
                     draggable={
-                      isDraggable &&
-                      currentShapeSelected.id === shape.id
+                      isDraggable && currentShapeSelected.id === shape.id
                     }
                     onDragEnd={onDragEndHandler}
                   />
@@ -547,8 +520,7 @@ const PrivateCanvasProps = ({
                     {...shape}
                     onClick={(e) => onclickHandler(e)}
                     draggable={
-                      isDraggable &&
-                      currentShapeSelected.id === shape.id
+                      isDraggable && currentShapeSelected.id === shape.id
                     }
                     onDragEnd={onDragEndHandler}
                   />
@@ -562,8 +534,7 @@ const PrivateCanvasProps = ({
                     onClick={onclickHandler}
                     tension={0.5}
                     draggable={
-                      isDraggable &&
-                      currentShapeSelected.id === shape.id
+                      isDraggable && currentShapeSelected.id === shape.id
                     }
                     onDragEnd={onDragEndHandler}
                   />
@@ -577,8 +548,7 @@ const PrivateCanvasProps = ({
                     onClick={onclickHandler}
                     onDblClick={onDoubleClickHandler}
                     draggable={
-                      isDraggable &&
-                      currentShapeSelected.id === shape.id
+                      isDraggable && currentShapeSelected.id === shape.id
                     }
                     onDragEnd={onDragEndHandler}
                   />

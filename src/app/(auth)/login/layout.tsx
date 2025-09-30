@@ -2,17 +2,17 @@ import { Metadata } from 'next';
 import { ReactNode } from 'react';
 
 export const metadata: Metadata = {
-	title: 'Scribbly user login',
-	description: 'User login page',
+  title: 'Scribbly user login',
+  description: 'User login page',
 };
 
 export default function LoignLayout({
-	children,
+  children,
 }: Readonly<{ children: ReactNode }>) {
-	return (
-		<div className='grid min-h-svh lg:grid-cols-2'>
-			{children}
-			<div className='bg-secondary hidden h-full w-full bg-[radial-gradient(var(--primary),transparent_1px)] [background-size:26px_26px] lg:block' />
-		</div>
-	);
+  return (
+    <div className='grid min-h-svh lg:grid-cols-2'>
+      {children}
+      <div className='bg-secondary hidden h-full w-full bg-[radial-gradient(var(--primary),transparent_1px)] [background-size:26px_26px] lg:block' />
+    </div>
+  );
 }

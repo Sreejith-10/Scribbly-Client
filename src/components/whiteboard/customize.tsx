@@ -4,8 +4,12 @@ import { ActionType } from '@/types';
 import { LineThickness } from './properties/linethickness';
 import { LayerButtons } from './properties/layerbuttons';
 import { type ShapeConfig } from 'konva/lib/Shape';
+import { Text, type TextConfig } from 'konva/lib/shapes/Text';
 
-interface PropertyType extends ShapeConfig { }
+interface PropertyType extends ShapeConfig {}
+
+const a: keyof Pick<Text, 'fontFamily' | 'fontSize' | 'fontStyle'> =
+  'fontFamily';
 
 const ActionProperties: Record<
   ActionType,
@@ -32,14 +36,13 @@ const ActionProperties: Record<
   },
   line: {},
   eraser: {},
-  text: {},
+  text: {
+    stroke: true,
+  },
 };
 
 interface CustomizeProps {
-  onPropertyChange: (args: {
-    prop: keyof PropertyType;
-    value: string;
-  }) => void;
+  onPropertyChange: (args: { prop: keyof PropertyType; value: string }) => void;
 }
 
 export const Customize = ({ onPropertyChange }: CustomizeProps) => {
@@ -60,67 +63,61 @@ export const Customize = ({ onPropertyChange }: CustomizeProps) => {
     <div className='bg-secondary @container-normal flex h-fit items-center gap-5 rounded-md border p-3 px-5 shadow-md'>
       {action === 'select' && currentSelectedShape ? (
         <>
-          <LayerButtons />
-          {Object.keys(
-            ActionProperties[currentSelectedShape.type],
-          )?.map((prop) => {
-            switch (prop) {
-              case 'fill':
-                return (
-                  <div key={prop}>
-                    <ColorPicker
-                      title='Background'
-                      defaultColor={
-                        currentSelectedShape.stroke as string
-                      }
-                      onChangeHandler={(color) => {
-                        setStroke(color);
-                        onPropertyChange({
-                          prop,
-                          value: color,
-                        });
-                      }}
-                    />
-                  </div>
-                );
-              case 'stroke':
-                return (
-                  <div key={prop}>
-                    <ColorPicker
-                      title='Foreground'
-                      defaultColor={
-                        currentSelectedShape.fill as string
-                      }
-                      onChangeHandler={(color) => {
-                        setFill(color);
-                        onPropertyChange({
-                          prop,
-                          value: color,
-                        });
-                      }}
-                    />
-                  </div>
-                );
-              case 'lineThickness':
-                return (
-                  <div key={prop}>
-                    <LineThickness
-                      thickness={
-                        currentSelectedShape.strokeWidth!
-                      }
-                    />
-                  </div>
-                );
-              case 'layers':
-                return (
-                  <div key={prop}>
-                    <LayerButtons />
-                  </div>
-                );
-              default:
-                return null;
-            }
-          })}
+          {/* <LayerButtons /> */}
+          {Object.keys(ActionProperties[currentSelectedShape.type])?.map(
+            (prop) => {
+              switch (prop) {
+                case 'fill':
+                  return (
+                    <div key={prop}>
+                      <ColorPicker
+                        title='Background'
+                        defaultColor={currentSelectedShape.stroke as string}
+                        onChangeHandler={(color) => {
+                          setStroke(color);
+                          onPropertyChange({
+                            prop,
+                            value: color,
+                          });
+                        }}
+                      />
+                    </div>
+                  );
+                case 'stroke':
+                  return (
+                    <div key={prop}>
+                      <ColorPicker
+                        title='Foreground'
+                        defaultColor={currentSelectedShape.fill as string}
+                        onChangeHandler={(color) => {
+                          setFill(color);
+                          onPropertyChange({
+                            prop,
+                            value: color,
+                          });
+                        }}
+                      />
+                    </div>
+                  );
+                case 'lineThickness':
+                  return (
+                    <div key={prop}>
+                      <LineThickness
+                        thickness={currentSelectedShape.strokeWidth!}
+                      />
+                    </div>
+                  );
+                case 'layers':
+                  return (
+                    <div key={prop}>
+                      <LayerButtons />
+                    </div>
+                  );
+                default:
+                  return null;
+              }
+            },
+          )}
         </>
       ) : (
         properties?.map((prop) => {
@@ -131,9 +128,7 @@ export const Customize = ({ onPropertyChange }: CustomizeProps) => {
                   <ColorPicker
                     title='Background'
                     defaultColor={stroke}
-                    onChangeHandler={(color) =>
-                      setFill(color)
-                    }
+                    onChangeHandler={(color) => setFill(color)}
                   />
                 </div>
               );
@@ -143,9 +138,7 @@ export const Customize = ({ onPropertyChange }: CustomizeProps) => {
                   <ColorPicker
                     title='Foreground'
                     defaultColor={fill}
-                    onChangeHandler={(color) =>
-                      setStroke(color)
-                    }
+                    onChangeHandler={(color) => setStroke(color)}
                   />
                 </div>
               );
@@ -155,12 +148,24 @@ export const Customize = ({ onPropertyChange }: CustomizeProps) => {
                   <LineThickness thickness={strokeWidth} />
                 </div>
               );
-            case 'layers':
-              return (
-                <div key={prop}>
-                  <LayerButtons />
-                </div>
-              );
+              {
+                /* case 'layers': */
+              }
+              {
+                /*   return ( */
+              }
+              {
+                /*     <div key={prop}> */
+              }
+              {
+                /*       <LayerButtons /> */
+              }
+              {
+                /*     </div> */
+              }
+              {
+                /*   ); */
+              }
             default:
               return null;
           }

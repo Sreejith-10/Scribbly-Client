@@ -56,10 +56,11 @@ export const NavBar = () => {
 
   return (
     <motion.header
-      className={`fixed top-0 right-0 left-0 z-50 px-4 py-3 transition-all duration-300 ${scrolled
-        ? 'bg-background/80 shadow-sm backdrop-blur-md'
-        : 'bg-transparent'
-        }`}
+      className={`fixed top-0 right-0 left-0 z-50 px-4 py-3 transition-all duration-300 ${
+        scrolled
+          ? 'bg-background/80 shadow-sm backdrop-blur-md'
+          : 'bg-transparent'
+      }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -72,12 +73,7 @@ export const NavBar = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <div className='flex h-9 w-9 items-center justify-center'>
-            <Image
-              src='/icons/icon.png'
-              alt='logo'
-              width={100}
-              height={100}
-            />
+            <Image src='/icons/icon.png' alt='logo' width={100} height={100} />
           </div>
           <span className='text-xl font-bold'>Scribbly</span>
         </motion.div>
@@ -112,20 +108,14 @@ export const NavBar = () => {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink
-                className={
-                  (navigationMenuTriggerStyle(),
-                    'bg-transparent')
-                }
+                className={(navigationMenuTriggerStyle(), 'bg-transparent')}
               >
                 Pricing
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink
-                className={
-                  (navigationMenuTriggerStyle(),
-                    'bg-transparent')
-                }
+                className={(navigationMenuTriggerStyle(), 'bg-transparent')}
               >
                 Resources
               </NavigationMenuLink>
@@ -143,10 +133,7 @@ export const NavBar = () => {
           </Button>
         </div>
 
-        <Menu
-          onClick={() => setMobileNavOpen(true)}
-          className='md:hidden'
-        />
+        <Menu onClick={() => setMobileNavOpen(true)} className='md:hidden' />
 
         <MobileMenu
           isOpen={mobileNavOpen}

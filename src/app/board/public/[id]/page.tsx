@@ -38,12 +38,11 @@ export default function Page() {
   });
   const [hideCustomCursor, setHideCustomCursor] = useState<boolean>(false);
   const [collaboratorsCursors, setCollaboratorsCursors] = useState<
-    Map<
-      string,
-      { clientId: string; x: number; y: number; username: string }
-    >
+    Map<string, { clientId: string; x: number; y: number; username: string }>
   >(new Map());
-  const [lockedShapes, setLockedShapes] = useState<Record<PropertyKey, string>>({})
+  const [lockedShapes, setLockedShapes] = useState<
+    Record<PropertyKey, { uid: string; username: string }>
+  >({});
 
   const action = useToolbarStore((state) => state.action);
   const isSelected = useToolbarStore((state) => state.isShapeSelected);
@@ -56,15 +55,13 @@ export default function Page() {
 
     emit('joinBoard', { boardId: id });
     emit('activeUsers');
+    emit('lockedShapes', { boardId: id });
 
     const handleBoardState = (data: IBoardState) => {
       setShapes(Object.values(data.currentState));
     };
 
-    const handleUserJoined = (data: {
-      username: string;
-      userId: string;
-    }) => {
+    const handleUserJoined = (data: { username: string; userId: string }) => {
       toast.info(`${data.username} joined board`, {
         position: 'top-left',
       });
@@ -81,8 +78,10 @@ export default function Page() {
       const filteredUsers = data.filter((u) => u.userId !== user?._id);
 
       filteredUsers.forEach((item) => {
-        const user = collaborators?.collaborators.find((c) => c.userId === item.userId)
-        if (user?.role === "view") return;
+        const user = collaborators?.collaborators.find(
+          (c) => c.userId === item.userId,
+        );
+        if (user?.role === 'view') return;
         setCollaboratorsCursors((prev) => {
           if (!prev.has(item.userId) && item.userId) {
             return prev.set(item.userId, {
@@ -130,16 +129,26 @@ export default function Page() {
       toast.info(`${data.username} left`, { position: 'top-left' });
     };
 
-    const handleLockShape = (data: { shapeId: string, lockUser: string }) => {
-      const { shapeId, lockUser } = data
-      setLockedShapes((prev) => ({ ...prev, [shapeId]: lockUser }))
-    }
+    const handleLockedNewShape = (data: {
+      shapeId: string;
+      lockUser: { uid: string; username: string };
+    }) => {
+      const { shapeId, lockUser } = data;
+      if (!user) return;
+      setLockedShapes((prev) => ({ ...prev, [shapeId]: lockUser }));
+    };
 
     const handleUnlockShape = (data: { shapeId: string }) => {
-      const updatedLocks = { ...lockedShapes }
-      delete updatedLocks[data.shapeId]
-      setLockedShapes(updatedLocks)
-    }
+      const updatedLocks = { ...lockedShapes };
+      delete updatedLocks[data.shapeId];
+      setLockedShapes(updatedLocks);
+    };
+
+    const handleCurrentlyLockedShape = (
+      data: Record<PropertyKey, { uid: string; username: string }>,
+    ) => {
+      setLockedShapes(data);
+    };
 
     on('boardState', handleBoardState);
     on('userJoined', handleUserJoined);
@@ -147,8 +156,9 @@ export default function Page() {
     on('mouseMove', handleMouseMove);
     on('activeUsers', handleActiveUsers);
     on('userLeft', handleLeaveUser);
-    on('lockedShapes', handleLockShape)
-    on('unlockShape', handleUnlockShape)
+    on('lockedNewShape', handleLockedNewShape);
+    on('unlockShape', handleUnlockShape);
+    on('currentlyLockedShapes', handleCurrentlyLockedShape);
 
     return () => {
       socketDisconnect();
@@ -162,7 +172,7 @@ export default function Page() {
     };
 
     const handleMouseMove = (event: MouseEvent) => {
-      if (!permission) return
+      if (!permission) return;
       setUserPointer(() => ({ x: event.clientX, y: event.clientY }));
       throttledMouse(2000, () => {
         emit('mouseMove', { x: event.clientX, y: event.clientY });
@@ -191,9 +201,7 @@ export default function Page() {
         });
         break;
       case 'delete':
-        setShapes((prev) =>
-          prev.filter((shape) => shape.id !== delta.data.id),
-        );
+        setShapes((prev) => prev.filter((shape) => shape.id !== delta.data.id));
         break;
       default:
         break;
@@ -218,34 +226,33 @@ export default function Page() {
   };
 
   const handleShapeSelect = (shapeId: string) => {
-    emit('selectShape', { shapeId })
-  }
+    emit('selectShape', { shapeId });
+  };
 
   const handleShapeDisSelect = (shapeId: string) => {
-    emit('unlockShape', { shapeId })
-  }
+    emit('unlockShape', { shapeId });
+  };
+
+  console.log(lockedShapes);
 
   return (
     <div
       className={`relative h-screen w-full ${hideCustomCursor ? 'cursor-auto' : 'cursor-none'}`}
     >
-      {!hideCustomCursor ? permission ? (
-        <Pointer
-          x={userPointer.x}
-          y={userPointer.y}
-          color='red'
-          username='You'
-        />
-      ) : null : null}
+      {!hideCustomCursor ? (
+        permission ? (
+          <Pointer
+            x={userPointer.x}
+            y={userPointer.y}
+            color='red'
+            username='You'
+          />
+        ) : null
+      ) : null}
       {collaboratorsCursors
         ? Array.from(collaboratorsCursors)?.map(([key, value]) => (
-          <Pointer
-            {...value}
-            color='blue'
-            key={key}
-            className='z-0'
-          />
-        ))
+            <Pointer {...value} color='blue' key={key} className='z-0' />
+          ))
         : null}
       {permission ? (
         <div
@@ -258,9 +265,7 @@ export default function Page() {
         <div className='bg-destructive/30 outline-destructive/50 fixed top-5 left-1/2 z-10 h-10 w-fit -translate-x-1/2 rounded-md p-2 outline-2'>
           <div className='flex items-center justify-between gap-4'>
             <AlertTriangle className='' />
-            <span className='text-sm'>
-              You don't have permission to edit
-            </span>
+            <span className='text-sm'>You don't have permission to edit</span>
           </div>
         </div>
       )}
@@ -288,14 +293,18 @@ export default function Page() {
         />
       </div>
       {!['free', 'eraser'].includes(action) ||
-        (action === 'select' && isSelected) ? (
+      (action === 'select' && isSelected) ? (
         permission ? (
           <div
             className='absolute bottom-5 left-1/2 -translate-x-1/2'
             onMouseEnter={handleCursorHideHandler}
             onMouseLeave={handleCursorShowHandler}
           >
-            <Customize onPropertyChange={(prop) => { console.log(prop) }} />
+            <Customize
+              onPropertyChange={(prop) => {
+                console.log(prop);
+              }}
+            />
           </div>
         ) : null
       ) : null}

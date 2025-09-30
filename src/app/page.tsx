@@ -10,18 +10,18 @@ import { NewsletterSection } from '@/components/sections/newsletter-section';
 import { Footer } from '@/components/sections/footer';
 
 export default function LandingPage() {
-	return (
-		<div className='min-h-screen'>
-			<NavBar />
-			<HeroSection />
-			<FeaturesSection />
-			<HowItWorksSection />
-			<TestimonialsSection />
-			<PricingSection />
-			<FAQSection />
-			<CTASection />
-			<NewsletterSection />
-			<Footer />
-		</div>
-	);
+  return (
+    <div className='min-h-screen'>
+      <NavBar />
+      <HeroSection />
+      <FeaturesSection />
+      <HowItWorksSection />
+      <TestimonialsSection />
+      <PricingSection />
+      <FAQSection />
+      <CTASection />
+      <NewsletterSection />
+      <Footer />
+    </div>
+  );
 }

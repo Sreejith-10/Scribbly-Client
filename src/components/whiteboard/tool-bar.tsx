@@ -75,21 +75,16 @@ export const ToolBar = () => {
               <div
                 onClick={() => {
                   setAction('free' as ActionType);
-                  if (
-                    !['select', 'eraser', 'free'].includes(
-                      'free',
-                    )
-                  ) {
+                  if (!['select', 'eraser', 'free'].includes('free')) {
                     setToolSelected(true);
                   } else {
                     setToolSelected(false);
                   }
                 }}
                 aria-label={'free'}
-                className={`hover:bg-primary/90 flex size-8 items-center justify-center rounded-md ${action === 'free'
-                  ? 'bg-primary'
-                  : 'bg-secondary'
-                  }`}
+                className={`hover:bg-primary/90 flex size-8 items-center justify-center rounded-md ${
+                  action === 'free' ? 'bg-primary' : 'bg-secondary'
+                }`}
               >
                 <Hand className='size-5' />
               </div>
@@ -104,30 +99,21 @@ export const ToolBar = () => {
                 <div
                   onClick={() => {
                     setAction(tool.value as ActionType);
-                    if (
-                      ![
-                        'select',
-                        'eraser',
-                        'free',
-                      ].includes(tool.value)
-                    ) {
+                    if (!['select', 'eraser', 'free'].includes(tool.value)) {
                       setToolSelected(true);
                     } else {
                       setToolSelected(false);
                     }
                   }}
                   aria-label={tool.value}
-                  className={`hover:bg-primary/90 flex size-8 items-center justify-center rounded-md ${action === tool.value
-                    ? 'bg-primary'
-                    : 'bg-secondary'
-                    }`}
+                  className={`hover:bg-primary/90 flex size-8 items-center justify-center rounded-md ${
+                    action === tool.value ? 'bg-primary' : 'bg-secondary'
+                  }`}
                 >
                   {tool.icon}
                 </div>
               </TooltipTrigger>
-              <TooltipContent>
-                {tool.value as string}
-              </TooltipContent>
+              <TooltipContent>{tool.value as string}</TooltipContent>
             </Tooltip>
           </div>
         ))}

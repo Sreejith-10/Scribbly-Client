@@ -45,8 +45,7 @@ export const HeroSection = () => {
         <motion.div
           className='absolute inset-0 opacity-30'
           style={{
-            backgroundImage:
-              "url('/placeholder.svg?height=1080&width=1920')",
+            backgroundImage: "url('/placeholder.svg?height=1080&width=1920')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             y,
@@ -71,22 +70,15 @@ export const HeroSection = () => {
               <span className='text-primary'>together</span>
             </H1>
             <P className='text-muted-foreground text-sm lg:text-sm'>
-              The collaborative whiteboard platform that brings
-              teams together to create, plan, and innovate—all in
-              real-time.
+              The collaborative whiteboard platform that brings teams together
+              to create, plan, and innovate—all in real-time.
             </P>
             <div className='flex flex-col gap-4 sm:flex-row'>
               <Button size='lg' className='gap-2'>
-                <Link href='/dashboard'>
-                  Get started for free
-                </Link>
+                <Link href='/dashboard'>Get started for free</Link>
                 <ChevronRight className='h-4 w-4' />
               </Button>
-              <Button
-                size='lg'
-                variant='outline'
-                className='gap-2'
-              >
+              <Button size='lg' variant='outline' className='gap-2'>
                 See it in action
                 <Compass className='h-4 w-4' />
               </Button>
@@ -106,11 +98,11 @@ export const HeroSection = () => {
             animate='visible'
             className='relative'
           >
-            <div className='relative w-full h-full aspect-video overflow-hidden rounded-xl border shadow-xl'>
+            <div className='relative aspect-video h-full w-full overflow-hidden rounded-xl border shadow-xl'>
               <Image
                 src='/assets/board-thumb.png'
                 alt='Whiteboard app interface'
-                className='w-full h-full object-contain'
+                className='h-full w-full object-contain'
                 width={800}
                 height={800}
               />
@@ -134,9 +126,7 @@ export const HeroSection = () => {
                     </Avatar>
                   ))}
                 </div>
-                <span className='text-sm font-medium'>
-                  3 people editing
-                </span>
+                <span className='text-sm font-medium'>3 people editing</span>
               </div>
             </motion.div>
 
@@ -148,9 +138,7 @@ export const HeroSection = () => {
             >
               <div className='flex items-center gap-2'>
                 <MessageSquare className='text-primary h-5 w-5' />
-                <span className='text-sm font-medium'>
-                  Real-time comments
-                </span>
+                <span className='text-sm font-medium'>Real-time comments</span>
               </div>
             </motion.div>
           </motion.div>
