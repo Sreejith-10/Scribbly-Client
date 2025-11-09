@@ -5,3 +5,4 @@ export * from './toolbar.type';
 export * from './common';
 export * from './collaboration-request.type';
 export * from './collaborator.type';
+export * from './user.type';

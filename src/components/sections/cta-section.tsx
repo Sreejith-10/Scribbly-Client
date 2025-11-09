@@ -77,11 +77,11 @@ export const CTASection = () => {
             >
               <div className='aspect-video overflow-hidden rounded-xl border shadow-lg'>
                 <Image
-                  src='/placeholder.svg?height=400&width=600'
+                  src='/assets/board-collab.png'
                   alt='Whiteboard app demo'
                   className='h-full w-full object-cover'
-                  width={100}
-                  height={100}
+                  width={1000}
+                  height={1000}
                 />
               </div>
 

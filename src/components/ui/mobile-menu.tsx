@@ -16,7 +16,7 @@ interface MobileMenuProps {
   onClose: () => void;
 }
 
-export function MobileMenu({ isOpen, navItems, onClose }: MobileMenuProps) {
+export function MobileMenu({ isOpen,  navItems, onClose }: MobileMenuProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

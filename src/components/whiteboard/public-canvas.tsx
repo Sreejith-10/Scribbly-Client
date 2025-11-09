@@ -20,13 +20,10 @@ import {
   Line,
   Transformer,
   Text,
-  Group,
-  Label,
-  Tag,
 } from 'react-konva';
 import { Textarea } from '../ui/textarea';
-import { useUser } from '@/hooks/query/user';
 import { toast } from 'sonner';
+import { BoundingBox } from './bounding-box';
 
 interface PublicCanvasProps {
   action?: ActionType;
@@ -53,15 +50,11 @@ const PublicCanvasProps = ({
   onShapeDisSelect,
   lockedShapes,
 }: Readonly<PublicCanvasProps>) => {
-  const { data: user } = useUser();
-
   const [draftShape, setDraftShape] = useState<Shape | null>(null);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
-  const [textValue, setTextValue] = useState<string>('');
+  // const [_textValue, setTextValue] = useState<string>('');
 
-  const { action, stroke, fill, setIsShapeSelected, strokeWidth } =
-    useToolbarStore();
+  const { action, stroke, fill, setIsShapeSelected } = useToolbarStore();
   const { currentShapeSelected, setCurrentShapeSelected, removeSelectedShape } =
     useBoardStore();
 
@@ -174,91 +167,88 @@ const PublicCanvasProps = ({
       default:
         break;
     }
-  }, [action, fill, stroke, strokeWidth]);
+  }, [action, fill, stroke]);
 
-  const pointerMoveHandler = useCallback(
-    (e: Konva.KonvaEventObject<PointerEvent>) => {
-      if (['move', 'select', 'eraser'].includes(action)) return;
+  const pointerMoveHandler = useCallback(() => {
+    if (['move', 'select', 'eraser'].includes(action)) return;
 
-      const now = new Date().getTime();
-      if (now - lastUpdateTime.current < throttleDelay) return;
-      lastUpdateTime.current = now;
+    const now = new Date().getTime();
+    if (now - lastUpdateTime.current < throttleDelay) return;
+    lastUpdateTime.current = now;
 
-      const stage = stageRef.current;
-      if (!stage) return;
+    const stage = stageRef.current;
+    if (!stage) return;
 
-      const position = stage.getPointerPosition();
-      if (
-        position?.x &&
-        position?.y &&
-        initialPosition.current?.x &&
-        initialPosition.current.y
-      ) {
-        switch (draftShape?.type) {
-          case ActionType.RECTANGLE:
-            const width = Math.abs(position.x - initialPosition.current.x);
-            const height = Math.abs(position.y - initialPosition.current.y);
-            const x = Math.min(position.x, initialPosition.current.x);
-            const y = Math.min(position.y, initialPosition.current.y);
-            setDraftShape((prev) => ({
-              ...prev!,
-              width,
-              height,
-              x,
-              y,
-            }));
-            break;
+    const position = stage.getPointerPosition();
+    if (
+      position?.x &&
+      position?.y &&
+      initialPosition.current?.x &&
+      initialPosition.current.y
+    ) {
+      switch (draftShape?.type) {
+        case ActionType.RECTANGLE:
+          const width = Math.abs(position.x - initialPosition.current.x);
+          const height = Math.abs(position.y - initialPosition.current.y);
+          const x = Math.min(position.x, initialPosition.current.x);
+          const y = Math.min(position.y, initialPosition.current.y);
+          setDraftShape((prev) => ({
+            ...prev!,
+            width,
+            height,
+            x,
+            y,
+          }));
+          break;
 
-          case ActionType.CIRCLE:
-            setDraftShape((prev) => ({
-              ...prev!,
-              radius: Math.sqrt(
-                Math.pow((position?.x ?? 0) - (prev?.x ?? 0), 2) +
-                  Math.pow((position?.y ?? 0) - (prev?.y ?? 0), 2),
-              ),
-            }));
-            break;
+        case ActionType.CIRCLE:
+          setDraftShape((prev) => ({
+            ...prev!,
+            radius: Math.sqrt(
+              Math.pow((position?.x ?? 0) - (prev?.x ?? 0), 2) +
+                Math.pow((position?.y ?? 0) - (prev?.y ?? 0), 2),
+            ),
+          }));
+          break;
 
-          case ActionType.ARROW:
-            setDraftShape((prev) => ({
-              ...prev!,
-              points: [
-                prev?.points[0],
-                prev?.points[1],
-                position?.x ?? 0,
-                position?.y ?? 0,
-              ],
-            }));
-            break;
+        case ActionType.ARROW:
+          setDraftShape((prev) => ({
+            ...prev!,
+            points: [
+              prev?.points[0],
+              prev?.points[1],
+              position?.x ?? 0,
+              position?.y ?? 0,
+            ],
+          }));
+          break;
 
-          case ActionType.LINE:
-            setDraftShape((prev) => ({
-              ...prev!,
-              points: [
-                prev?.points[0],
-                prev?.points[1],
-                position?.x ?? 0,
-                position?.y ?? 0,
-              ],
-            }));
-            break;
+        case ActionType.LINE:
+          setDraftShape((prev) => ({
+            ...prev!,
+            points: [
+              prev?.points[0],
+              prev?.points[1],
+              position?.x ?? 0,
+              position?.y ?? 0,
+            ],
+          }));
+          break;
 
-          case ActionType.PENCIL:
-            setDraftShape((prev) => ({
-              ...prev!,
-              points: [...prev?.points, position?.x ?? 0, position?.y ?? 0],
-            }));
-            break;
-          case ActionType.TEXT:
-            break;
+        case ActionType.PENCIL:
+          setDraftShape((prev) => ({
+            ...prev!,
+            points: [...prev?.points, position?.x ?? 0, position?.y ?? 0],
+          }));
+          break;
+        case ActionType.TEXT:
+          break;
 
-          default:
-            break;
-        }
+        default:
+          break;
       }
-    },
-    [action, draftShape],
-  );
+    }
+  }, [action, draftShape]);
 
   const pointerUpHandler = useCallback(() => {
     if (action === ActionType.SELECT) return;
@@ -275,7 +265,7 @@ const PublicCanvasProps = ({
     removeSelectedShape();
     setDraftShape(null);
     tranformerRef.current?.nodes([]);
-  }, [draftShape]);
+  }, [draftShape, action]);
 
   const onclickHandler = (e: KonvaEventObject<MouseEvent>) => {
     if (!canEdit) return;
@@ -291,12 +281,10 @@ const PublicCanvasProps = ({
     const shape = shapes.find((shape) => shape.id === id);
 
     if (action === ActionType.SELECT) {
-      if (target) {
-        onShapeSelect(shape?.id!);
-        tranformerRef.current?.nodes([target]);
-        setIsShapeSelected(true);
-        setCurrentShapeSelected(shape!);
-      }
+      onShapeSelect(shape?.id ?? '');
+      tranformerRef.current?.nodes([target]);
+      setIsShapeSelected(true);
+      setCurrentShapeSelected(shape!);
     } else if (action === ActionType.ERASER) {
       handleDelta({
         data: e.currentTarget.attrs,
@@ -315,7 +303,7 @@ const PublicCanvasProps = ({
 
       if (shapeData?.type === ActionType.TEXT) {
         setEditingTextId(shape.id);
-        setTextValue(shapeData.text || '');
+        // setTextValue(shapeData.text || '');
 
         setTimeout(() => {
           if (textInputRef.current) {
@@ -344,10 +332,10 @@ const PublicCanvasProps = ({
         data: { ...draftShape, text: updatedText },
       });
       setEditingTextId(null);
-      setTextValue('');
+      // setTextValue('');
       setDraftShape(null);
     }
-  }, [editingTextId]);
+  }, [editingTextId, draftShape]);
 
   const onDragEndHandler = (
     e: KonvaEventObject<DragEvent, Node<NodeConfig>>,
@@ -449,7 +437,7 @@ const PublicCanvasProps = ({
           setIsShapeSelected(false);
         } else if (editingTextId) {
           setEditingTextId(null);
-          setTextValue('');
+          // setTextValue('');
           setDraftShape(null);
           tranformerRef.current?.nodes([]);
         } else {
@@ -466,7 +454,7 @@ const PublicCanvasProps = ({
     return () => {
       window.removeEventListener('keydown', escapeKeyHandler);
     };
-  }, []);
+  }, [editingTextId]);
 
   return (
     <>
@@ -496,9 +484,13 @@ const PublicCanvasProps = ({
             switch (shape?.type) {
               case ActionType.RECTANGLE:
                 return (
-                  <Group>
+                  <BoundingBox
+                    key={shape.id}
+                    shape={shape}
+                    showBound={lockedShapes[shape.id] ? true : false}
+                    username={lockedShapes[shape.id]?.username ?? ''}
+                  >
                     <Rect
-                      key={shape.id}
                       {...shape}
                       id={shape.id}
                       draggable={
@@ -507,90 +499,103 @@ const PublicCanvasProps = ({
                       onClick={onclickHandler}
                       onDragEnd={onDragEndHandler}
                     />
-                    {lockedShapes[shape.id] && (
-                      <Label x={shape?.x! + 50} y={shape?.y! - 5}>
-                        <Tag
-                          fill={'red'}
-                          pointerDirection={'down'}
-                          pointerWidth={10}
-                          pointerHeight={10}
-                          cornerRadius={5}
-                        />
-                        <Text
-                          text={lockedShapes[shape.id].username}
-                          fontSize={12}
-                          padding={5}
-                          fill={'white'}
-                        />
-                      </Label>
-                    )}
-                  </Group>
+                  </BoundingBox>
                 );
               case ActionType.CIRCLE:
                 return (
-                  <Circle
+                  <BoundingBox
                     key={shape.id}
-                    {...shape}
-                    id={shape.id}
-                    draggable={
-                      isDraggable && currentShapeSelected?.id === shape.id
-                    }
-                    onClick={onclickHandler}
-                    onDragEnd={onDragEndHandler}
-                  />
+                    shape={shape}
+                    showBound={lockedShapes[shape.id] ? true : false}
+                    username={lockedShapes[shape.id]?.username ?? ''}
+                  >
+                    <Circle
+                      {...shape}
+                      id={shape.id}
+                      draggable={
+                        isDraggable && currentShapeSelected?.id === shape.id
+                      }
+                      onClick={onclickHandler}
+                      onDragEnd={onDragEndHandler}
+                    />
+                  </BoundingBox>
                 );
               case ActionType.ARROW:
                 return (
-                  // @ts-expect-error error
-                  <Arrow
-                    {...shape}
+                  <BoundingBox
                     key={shape.id}
-                    id={shape.id}
-                    draggable={
-                      isDraggable && currentShapeSelected?.id === shape.id
-                    }
-                    onClick={onclickHandler}
-                    onDragEnd={onDragEndHandler}
-                  />
+                    shape={shape}
+                    showBound={lockedShapes[shape.id] ? true : false}
+                    username={lockedShapes[shape.id]?.username ?? ''}
+                  >
+                    <Arrow
+                      {...shape}
+                      id={shape.id}
+                      points={shape.points}
+                      draggable={
+                        isDraggable && currentShapeSelected?.id === shape.id
+                      }
+                      onClick={onclickHandler}
+                      onDragEnd={onDragEndHandler}
+                    />
+                  </BoundingBox>
                 );
               case ActionType.LINE:
                 return (
-                  <Line
+                  <BoundingBox
                     key={shape.id}
-                    {...shape}
-                    draggable={
-                      isDraggable && currentShapeSelected?.id === shape.id
-                    }
-                    onClick={(e) => onclickHandler(e)}
-                    onDragEnd={onDragEndHandler}
-                  />
+                    shape={shape}
+                    showBound={lockedShapes[shape.id] ? true : false}
+                    username={lockedShapes[shape.id]?.username ?? ''}
+                  >
+                    <Line
+                      {...shape}
+                      draggable={
+                        isDraggable && currentShapeSelected?.id === shape.id
+                      }
+                      onClick={(e) => onclickHandler(e)}
+                      onDragEnd={onDragEndHandler}
+                    />
+                  </BoundingBox>
                 );
               case ActionType.PENCIL:
                 return (
-                  <Line
+                  <BoundingBox
                     key={shape.id}
-                    {...shape}
-                    id={shape.id}
-                    draggable={
-                      isDraggable && currentShapeSelected?.id === shape.id
-                    }
-                    onClick={onclickHandler}
-                    onDragEnd={onDragEndHandler}
-                  />
+                    shape={shape}
+                    showBound={lockedShapes[shape.id] ? true : false}
+                    username={lockedShapes[shape.id]?.username ?? ''}
+                  >
+                    <Line
+                      {...shape}
+                      id={shape.id}
+                      draggable={
+                        isDraggable && currentShapeSelected?.id === shape.id
+                      }
+                      onClick={onclickHandler}
+                      onDragEnd={onDragEndHandler}
+                    />
+                  </BoundingBox>
                 );
               case ActionType.TEXT:
                 return (
-                  <Text
+                  <BoundingBox
                     key={shape.id}
-                    {...shape}
-                    id={shape.id}
-                    onClick={onclickHandler}
-                    onDblClick={onDoubleClickHandler}
-                    draggable={
-                      isDraggable && currentShapeSelected?.id === shape.id
-                    }
-                    onDragEnd={onDragEndHandler}
-                  />
+                    shape={shape}
+                    showBound={lockedShapes[shape.id] ? true : false}
+                    username={lockedShapes[shape.id]?.username ?? ''}
+                  >
+                    <Text
+                      {...shape}
+                      id={shape.id}
+                      onClick={onclickHandler}
+                      onDblClick={onDoubleClickHandler}
+                      draggable={
+                        isDraggable && currentShapeSelected?.id === shape.id
+                      }
+                      onDragEnd={onDragEndHandler}
+                    />
+                  </BoundingBox>
                 );
               default:
                 return null;
@@ -606,7 +611,7 @@ const PublicCanvasProps = ({
         <Textarea
           ref={textInputRef}
           className='w-fit'
-          onChange={(e) => setTextValue(e.target.value)}
+          // onChange={(e) => setTextValue(e.target.value)}
           onBlur={handleTextCompletion}
         />
       )}

@@ -1,4 +1,4 @@
-import { Layers } from 'lucide-react';
+import Image from 'next/image';
 
 export const Footer = () => {
   return (
@@ -7,8 +7,13 @@ export const Footer = () => {
         <div className='grid gap-8 md:grid-cols-2 lg:grid-cols-4'>
           <div>
             <div className='mb-6 flex items-center gap-2'>
-              <div className='bg-primary flex h-8 w-8 items-center justify-center rounded-lg'>
-                <Layers className='text-primary-foreground h-5 w-5' />
+              <div className='h-8 w-8'>
+                <Image
+                  src='/icons/icon.png'
+                  alt='logo'
+                  width={100}
+                  height={100}
+                />
               </div>
               <span className='text-xl font-bold'>Whiteboard</span>
             </div>

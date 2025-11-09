@@ -1,7 +1,11 @@
+export type CollaborationRequestStatusType =
+  | 'pending'
+  | 'accepted'
+  | 'rejected';
 export interface ICollaborationRequest {
   boardId: string;
   userId: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: CollaborationRequestStatusType;
   requestedAt: string;
   expiresAt: string;
   requestCount: number;

@@ -18,14 +18,14 @@ export const HowItWorksSection = () => {
       title: 'Create',
       description:
         'Start with a blank canvas or choose from dozens of templates',
-      image: '/placeholder.svg?height=600&width=800',
+      image: '/assets/board-create.png',
       icon: Lightbulb,
     },
     {
       id: 'collaborate',
       title: 'Collaborate',
       description: 'Invite your team to join and work together in real-time',
-      image: '/placeholder.svg?height=600&width=800',
+      image: '/assets/board-collab.png',
       icon: Users,
     },
     {
@@ -126,8 +126,8 @@ export const HowItWorksSection = () => {
                       src={step.image || '/placeholder.svg'}
                       alt={step.title}
                       className='h-auto w-full'
-                      width={100}
-                      height={100}
+                      width={1000}
+                      height={1000}
                     />
                   </motion.div>
                 </div>

@@ -38,10 +38,10 @@ export default function Page() {
   });
   const [hideCustomCursor, setHideCustomCursor] = useState<boolean>(false);
   const [collaboratorsCursors, setCollaboratorsCursors] = useState<
-    Map<string, { clientId: string; x: number; y: number; username: string }>
-  >(new Map());
+    Record<string, { clientId: string; x: number; y: number; username: string }>
+  >({});
   const [lockedShapes, setLockedShapes] = useState<
-    Record<PropertyKey, { uid: string; username: string }>
+    Record<string, { uid: string; username: string }>
   >({});
 
   const action = useToolbarStore((state) => state.action);
@@ -50,22 +50,87 @@ export default function Page() {
   const { socket, emit, on, socketDisconnect } = useSocket();
   const throttledMouse = useThrottle();
 
+  const currentUser = collaborators?.collaborators.find(
+    (u) => u.userId === user?._id,
+  );
+
+  const permission =
+    currentUser?.role === 'edit' ||
+    boardMeta?.boardMetadata.owner._id === user?._id;
+
+  const handleDelta = (delta: DeltaProp) => {
+    switch (delta.operation) {
+      case 'create':
+        setShapes((prev) => [...prev, delta.data]);
+        break;
+      case 'update':
+        setShapes((prev) => {
+          return prev.map((shape) =>
+            shape.id === delta.data.id ? delta.data : shape,
+          );
+        });
+        break;
+      case 'delete':
+        setShapes((prev) => prev.filter((shape) => shape.id !== delta.data.id));
+        break;
+      default:
+        break;
+    }
+    emit('boardUpdate', { ...delta, shapeId: delta.data.id });
+  };
+
+  const handleCursorHideHandler = () => {
+    setHideCustomCursor(true);
+  };
+
+  const handleCursorShowHandler = () => {
+    setHideCustomCursor(false);
+  };
+
+  const handleShapeSelect = (shapeId: string) => {
+    emit('lockShape', { shapeId });
+  };
+
+  const handleShapeDisSelect = (shapeId: string) => {
+    emit('unlockShape', { shapeId });
+  };
+
+  const resetBoard = () => {
+    emit('resetBoard', { boardId: id });
+    toast.info('Board has reseted');
+  };
+
   useEffect(() => {
     if (!socket) return;
 
-    emit('joinBoard', { boardId: id });
-    emit('activeUsers');
-    emit('lockedShapes', { boardId: id });
+    if (id) {
+      emit('joinBoard', { boardId: id });
+      emit('activeUsers');
+      emit('lockedShapes', { boardId: id });
+    }
 
     const handleBoardState = (data: IBoardState) => {
       setShapes(Object.values(data.currentState));
     };
 
-    const handleUserJoined = (data: { username: string; userId: string }) => {
+    const handleUserJoined = (data: {
+      username: string;
+      userId: string;
+      clientId: string;
+    }) => {
       toast.info(`${data.username} joined board`, {
         position: 'top-left',
       });
-      emit('activeUsers');
+
+      setCollaboratorsCursors((prev) => ({
+        ...prev,
+        [data.userId]: {
+          x: 0,
+          y: 0,
+          clientId: data.clientId,
+          username: data.username,
+        },
+      }));
     };
 
     const handleUpdatedBoard = (data: IBoardState) => {
@@ -73,27 +138,27 @@ export default function Page() {
     };
 
     const handleActiveUsers = (
-      data: { userId: string; username: string; clientId: string }[],
+      data: Record<
+        string,
+        {
+          clientId: string;
+          username: string;
+        }
+      >,
     ) => {
-      const filteredUsers = data.filter((u) => u.userId !== user?._id);
+      Object.entries(data).forEach(([key, value]) => {
+        const user = collaborators?.collaborators.find((c) => c.userId === key);
 
-      filteredUsers.forEach((item) => {
-        const user = collaborators?.collaborators.find(
-          (c) => c.userId === item.userId,
-        );
         if (user?.role === 'view') return;
-        setCollaboratorsCursors((prev) => {
-          if (!prev.has(item.userId) && item.userId) {
-            return prev.set(item.userId, {
-              clientId: item.clientId,
-              x: 0,
-              y: 0,
-              username: item.username,
-            });
-          }
-
-          return prev;
-        });
+        setCollaboratorsCursors((prev) => ({
+          ...prev,
+          [key]: {
+            clientId: value.clientId,
+            x: 0,
+            y: 0,
+            username: value.username,
+          },
+        }));
       });
     };
 
@@ -104,13 +169,16 @@ export default function Page() {
       userId: string;
     }) => {
       setCollaboratorsCursors((prev) => {
-        if (prev.has(data.userId)) {
-          return prev.set(data.userId, {
-            ...prev.get(data.userId)!,
-            x: data.x,
-            y: data.y,
-          });
+        if (prev[data.userId]) {
+          return {
+            [data.userId]: {
+              ...prev[data.userId],
+              x: data.x,
+              y: data.y,
+            },
+          };
         }
+
         return prev;
       });
     };
@@ -120,12 +188,9 @@ export default function Page() {
       userId: string;
       username: string;
     }) => {
-      setCollaboratorsCursors((prev) => {
-        if (prev.has(data.userId)) {
-          prev.delete(data.userId);
-        }
-        return prev;
-      });
+      const copy = { ...collaboratorsCursors };
+      delete copy[data.userId];
+      setCollaboratorsCursors(copy);
       toast.info(`${data.username} left`, { position: 'top-left' });
     };
 
@@ -150,6 +215,11 @@ export default function Page() {
       setLockedShapes(data);
     };
 
+    const handleBoardReset = (data: IBoardState) => {
+      setShapes(Object.values(data.currentState));
+      toast.info('Board has reseted');
+    };
+
     on('boardState', handleBoardState);
     on('userJoined', handleUserJoined);
     on('boardUpdate', handleUpdatedBoard);
@@ -159,11 +229,12 @@ export default function Page() {
     on('lockedNewShape', handleLockedNewShape);
     on('unlockShape', handleUnlockShape);
     on('currentlyLockedShapes', handleCurrentlyLockedShape);
+    on('resetBoardUpdate', handleBoardReset);
 
     return () => {
       socketDisconnect();
     };
-  }, [socket]);
+  }, [socket, id]);
 
   useEffect(() => {
     const handleBeforeReload = () => {
@@ -186,54 +257,7 @@ export default function Page() {
       window.removeEventListener('beforeunload', handleBeforeReload);
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [emit]);
-
-  const handleDelta = (delta: DeltaProp) => {
-    switch (delta.operation) {
-      case 'create':
-        setShapes((prev) => [...prev, delta.data]);
-        break;
-      case 'update':
-        setShapes((prev) => {
-          return prev.map((shape) =>
-            shape.id === delta.data.id ? delta.data : shape,
-          );
-        });
-        break;
-      case 'delete':
-        setShapes((prev) => prev.filter((shape) => shape.id !== delta.data.id));
-        break;
-      default:
-        break;
-    }
-    emit('boardUpdate', { ...delta, shapeId: delta.data.id });
-  };
-
-  const currentUser = collaborators?.collaborators.find(
-    (u) => u.userId === user?._id,
-  );
-
-  const permission =
-    currentUser?.role === 'edit' ||
-    boardMeta?.boardMetadata.owner._id === user?._id;
-
-  const handleCursorHideHandler = () => {
-    setHideCustomCursor(true);
-  };
-
-  const handleCursorShowHandler = () => {
-    setHideCustomCursor(false);
-  };
-
-  const handleShapeSelect = (shapeId: string) => {
-    emit('selectShape', { shapeId });
-  };
-
-  const handleShapeDisSelect = (shapeId: string) => {
-    emit('unlockShape', { shapeId });
-  };
-
-  console.log(lockedShapes);
+  }, [emit, id, permission]);
 
   return (
     <div
@@ -250,7 +274,7 @@ export default function Page() {
         ) : null
       ) : null}
       {collaboratorsCursors
-        ? Array.from(collaboratorsCursors)?.map(([key, value]) => (
+        ? Object.entries(collaboratorsCursors)?.map(([key, value]) => (
             <Pointer {...value} color='blue' key={key} className='z-0' />
           ))
         : null}
@@ -265,7 +289,9 @@ export default function Page() {
         <div className='bg-destructive/30 outline-destructive/50 fixed top-5 left-1/2 z-10 h-10 w-fit -translate-x-1/2 rounded-md p-2 outline-2'>
           <div className='flex items-center justify-between gap-4'>
             <AlertTriangle className='' />
-            <span className='text-sm'>You don't have permission to edit</span>
+            <span className='text-sm'>
+              You don&apos;t have permission to edit
+            </span>
           </div>
         </div>
       )}
@@ -276,6 +302,7 @@ export default function Page() {
         <CanvasMenu
           onSave={() => console.log('save')}
           isOwner={boardMeta?.boardMetadata.ownerId === user?._id}
+          resetBoard={resetBoard}
         />
       </div>
       <div>

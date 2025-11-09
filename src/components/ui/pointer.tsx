@@ -62,3 +62,5 @@ export const Pointer = memo(
     );
   },
 );
+
+Pointer.displayName = 'Pointer';

@@ -40,6 +40,20 @@ const acceptRequest = async (boardId: string, userId: string) => {
   }
 };
 
+const rejectRequest = async <T>(
+  boardId: string,
+  requestedUserId: string,
+): Promise<ResponseDataType & { requests: T }> => {
+  try {
+    const response = await AxiosInstance.patch(
+      `/collaboration-requests/${boardId}/${requestedUserId}/reject`,
+    );
+    return response.data;
+  } catch (error) {
+    handleAxiosError(error);
+  }
+};
+
 const getCurrentUserCollaborationReuests = async <T>(
   userId: string,
 ): Promise<ResponseDataType & { requests: T }> => {
@@ -67,10 +81,25 @@ const getRequestStatus = async <T>(
   }
 };
 
+const removeCollaborationRequest = async <T>(
+  boardId: string,
+): Promise<ResponseDataType & { status: T }> => {
+  try {
+    const response = await AxiosInstance.delete(
+      `/collaboration-requests/${boardId}:`,
+    );
+    return response.data;
+  } catch (error) {
+    handleAxiosError(error);
+  }
+};
+
 export {
   getCollabReqByBoardId,
   sendCollabReq,
   acceptRequest,
+  rejectRequest,
   getCurrentUserCollaborationReuests,
   getRequestStatus,
+  removeCollaborationRequest,
 };

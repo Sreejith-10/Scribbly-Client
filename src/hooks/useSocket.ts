@@ -3,8 +3,38 @@ import { getSocket } from '../lib/socket';
 
 export const useSocket = () => {
   const socket = getSocket();
-  const listenersRef = useRef(new Map<string, (...args: unknown[]) => void>());
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const listenersRef = useRef(new Map<string, (...args: any[]) => void>());
   const isConnectedRef = useRef<boolean>(false);
+
+  const on = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (event: string, handler: (...args: any[]) => void) => {
+      if (!socket) return;
+      if (listenersRef.current.has(event)) {
+        socket.off(event, listenersRef.current.get(event)!);
+      }
+      socket.on(event, handler);
+      listenersRef.current.set(event, handler);
+    },
+    [socket],
+  );
+
+  const emit = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (event: string, ...args: any[]) => {
+      if (!socket) return;
+      socket.emit(event, ...args);
+    },
+    [socket],
+  );
+
+  const socketDisconnect = useCallback(() => {
+    if (!socket) return;
+
+    socket?.disconnect();
+    isConnectedRef.current = false;
+  }, [socket]);
 
   useEffect(() => {
     if (!socket) return;
@@ -37,33 +67,6 @@ export const useSocket = () => {
       socket.off('disconnect', onDisconnect);
       socket.disconnect();
     };
-  }, [socket]);
-
-  const on = useCallback(
-    (event: string, handler: (...args: unknown[]) => void) => {
-      if (!socket) return;
-      if (listenersRef.current.has(event)) {
-        socket.off(event, listenersRef.current.get(event)!);
-      }
-      socket.on(event, handler);
-      listenersRef.current.set(event, handler);
-    },
-    [socket],
-  );
-
-  const emit = useCallback(
-    (event: string, ...args: unknown[]) => {
-      if (!socket) return;
-      socket.emit(event, ...args);
-    },
-    [socket],
-  );
-
-  const socketDisconnect = useCallback(() => {
-    if (!socket) return;
-
-    socket?.disconnect();
-    isConnectedRef.current = false;
   }, [socket]);
 
   return { socket, on, emit, socketDisconnect };
